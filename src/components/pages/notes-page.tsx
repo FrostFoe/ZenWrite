@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Plus, PenSquare } from "lucide-react";
 import { motion } from "framer-motion";
@@ -74,21 +74,21 @@ function EmptyState() {
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5, type: "spring" }}
       className="flex h-full min-h-[50vh] flex-col items-center justify-center rounded-xl border border-dashed bg-muted/50 p-8 text-center"
     >
       <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
         <PenSquare className="h-8 w-8 text-primary" />
       </div>
       <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-        Your canvas awaits
+        আপনার ক্যানভাস অপেক্ষা করছে
       </h2>
       <p className="mt-2 max-w-sm text-muted-foreground">
-        Create your first masterpiece. Every great story begins with a single
-        word.
+        আপনার প্রথম মাস্টারপিস তৈরি করুন। প্রতিটি মহান গল্প একটি একক শব্দ দিয়ে শুরু হয়।
       </p>
       <Button asChild className="mt-6">
         <Link href="/editor/new">
-          <Plus className="mr-2 h-4 w-4" /> Start Writing
+          <Plus className="mr-2 h-4 w-4" /> লেখা শুরু করুন
         </Link>
       </Button>
     </motion.div>

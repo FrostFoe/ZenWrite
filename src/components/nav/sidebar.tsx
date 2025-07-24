@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { useSettings } from "@/hooks/use-settings";
 
 const navItems = [
-  { href: "/notes", label: "Notes", icon: Home },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/notes", label: "নোট সমূহ", icon: Home },
+  { href: "/settings", label: "সেটিংস", icon: Settings },
 ];
 
 export default function Sidebar() {
@@ -22,7 +22,7 @@ export default function Sidebar() {
       <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r bg-background px-6 pb-4">
         <div className="flex h-16 shrink-0 items-center">
           <h1 className={cn("text-2xl font-bold tracking-tight", fontClass)}>
-            MNRNotes
+            আমার নোট
           </h1>
         </div>
         <nav className="flex flex-1 flex-col">
@@ -31,7 +31,7 @@ export default function Sidebar() {
               <Button asChild className="w-full justify-start text-lg h-12">
                 <Link href="/editor/new">
                   <PenSquare className="mr-3 h-5 w-5" />
-                  New Note
+                  নতুন নোট
                 </Link>
               </Button>
             </li>

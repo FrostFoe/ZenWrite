@@ -14,7 +14,7 @@ export const createNote = async (): Promise<string> => {
   const id = `note_${Date.now()}`;
   const newNote: Note = {
     id,
-    title: "Untitled Note",
+    title: "শিরোনামহীন নোট",
     content: {
       time: Date.now(),
       blocks: [
@@ -22,7 +22,7 @@ export const createNote = async (): Promise<string> => {
           id: `block_${Date.now()}`,
           type: "header",
           data: {
-            text: "Untitled Note",
+            text: "শিরোনামহীন নোট",
             level: 1,
           },
         },
@@ -34,7 +34,7 @@ export const createNote = async (): Promise<string> => {
     charCount: 0,
   };
   await set(id, newNote);
-  toast.success("New note created!");
+  toast.success("নতুন নোট তৈরি হয়েছে!");
   router.push(`/editor/${id}`);
   router.refresh(); // Refresh server components
   return id;
@@ -46,7 +46,7 @@ export const getNote = async (id: string): Promise<Note | undefined> => {
     const newId = `note_${Date.now()}`;
     const newNote: Note = {
       id: newId,
-      title: "Untitled Note",
+      title: "শিরোনামহীন নোট",
       content: {
         time: Date.now(),
         blocks: [
@@ -54,7 +54,7 @@ export const getNote = async (id: string): Promise<Note | undefined> => {
             id: `block_${Date.now()}`,
             type: "header",
             data: {
-              text: "Untitled Note",
+              text: "শিরোনামহীন নোট",
               level: 1,
             },
           },
@@ -125,7 +125,7 @@ export const exportNotes = async () => {
 export const getNoteTitle = (data: OutputData): string => {
   const firstBlock = data.blocks[0];
   if (firstBlock && firstBlock.type === "header") {
-    return firstBlock.data.text || "Untitled Note";
+    return firstBlock.data.text || "শিরোনামহীন নোট";
   }
-  return "Untitled Note";
+  return "শিরোনামহীন নোট";
 };

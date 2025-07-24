@@ -8,9 +8,9 @@ import { cn } from "@/lib/utils";
 import { useSettings } from "@/hooks/use-settings";
 
 const navItems = [
-  { href: "/notes", label: "Notes", icon: Home },
-  { href: "/editor/new", label: "New Note", icon: PenSquare },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/notes", label: "নোট", icon: Home },
+  { href: "/editor/new", label: "নতুন", icon: PenSquare },
+  { href: "/settings", label: "সেটিংস", icon: Settings },
 ];
 
 export default function BottomNav() {

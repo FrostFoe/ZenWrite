@@ -57,7 +57,7 @@ export default function EditorPage({ note }: { note: Note }) {
         charCount: charCount,
       });
     } catch (error) {
-      toast.error("Failed to save note.");
+      toast.error("নোট সংরক্ষণ করতে ব্যর্থ হয়েছে।");
     }
   };
 
@@ -68,10 +68,10 @@ export default function EditorPage({ note }: { note: Note }) {
       // from Editor.js instance here. A better approach would be to trigger a save
       // inside the editor component and await it.
       // For now, we just show a toast.
-      toast.success("Note saved successfully!");
+      toast.success("নোট সফলভাবে সংরক্ষণ করা হয়েছে!");
       setSaveStatus("saved");
     } catch (e) {
-      toast.error("Failed to save.");
+      toast.error("সংরক্ষণ করতে ব্যর্থ হয়েছে।");
       setSaveStatus("unsaved");
     }
   };

@@ -1,17 +1,19 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Sora, Outfit } from "next/font/google";
+import { Tiro_Bangla } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "sonner";
 
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const sora = Sora({ subsets: ["latin"], variable: "--font-sora" });
-const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
+const tiroBangla = Tiro_Bangla({
+  subsets: ["bengali"],
+  weight: ["400"],
+  variable: "--font-tiro-bangla",
+});
 
 export const metadata: Metadata = {
-  title: "MNRNotes",
-  description: "A serene space for your thoughts.",
+  title: "আমার নোট",
+  description: "আপনার চিন্তার জন্য একটি নির্মল জায়গা।",
   manifest: "/manifest.json",
 };
 
@@ -33,8 +35,8 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
-      className={`${inter.variable} ${sora.variable} ${outfit.variable}`}
+      lang="bn"
+      className={`${tiroBangla.variable}`}
       suppressHydrationWarning
     >
       <body className="font-sans antialiased">

@@ -39,7 +39,7 @@ export default function NotesHeader({
           fontClass,
         )}
       >
-        My Notes
+        আমার নোট
       </h1>
       <div className="flex items-center gap-2">
         <Select
@@ -47,16 +47,16 @@ export default function NotesHeader({
           onValueChange={(value) => setSortOption(value as SortOption)}
         >
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Sort by..." />
+            <SelectValue placeholder="সাজান..." />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="updatedAt-desc">Recently Updated</SelectItem>
-            <SelectItem value="createdAt-desc">Newest First</SelectItem>
-            <SelectItem value="createdAt-asc">Oldest First</SelectItem>
-            <SelectItem value="title-asc">Title (A-Z)</SelectItem>
-            <SelectItem value="title-desc">Title (Z-A)</SelectItem>
-            <SelectItem value="charCount-desc">Length (Longest)</SelectItem>
-            <SelectItem value="charCount-asc">Length (Shortest)</SelectItem>
+            <SelectItem value="updatedAt-desc">সম্প্রতি আপডেট হয়েছে</SelectItem>
+            <SelectItem value="createdAt-desc">নতুন প্রথমে</SelectItem>
+            <SelectItem value="createdAt-asc">পুরানো প্রথমে</SelectItem>
+            <SelectItem value="title-asc">শিরোনাম (A-Z)</SelectItem>
+            <SelectItem value="title-desc">শিরোনাম (Z-A)</SelectItem>
+            <SelectItem value="charCount-desc">দৈর্ঘ্য (দীর্ঘতম)</SelectItem>
+            <SelectItem value="charCount-asc">দৈর্ঘ্য (সংক্ষিপ্ততম)</SelectItem>
           </SelectContent>
         </Select>
         <div className="rounded-md bg-muted p-0.5 flex">
@@ -85,7 +85,7 @@ export default function NotesHeader({
         </div>
         <Button asChild className="hidden">
           <Link href="/editor/new">
-            <Plus className="mr-2 h-4 w-4" /> New Note
+            <Plus className="mr-2 h-4 w-4" /> নতুন নোট
           </Link>
         </Button>
       </div>

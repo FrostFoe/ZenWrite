@@ -15,7 +15,7 @@ interface SettingsState extends Settings {
 
 const defaultSettings: Settings = {
   theme: "theme-vanilla-fog",
-  font: "font-inter",
+  font: "font-tiro-bangla",
 };
 
 const useSettingsStore = create<SettingsState>()(

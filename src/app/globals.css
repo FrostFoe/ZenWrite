@@ -145,14 +145,6 @@
   }
 }
 
-html.font-inter {
-  --font-sans: "Inter", sans-serif;
-}
-
-html.font-sora {
-  --font-sans: "Sora", sans-serif;
-}
-
-html.font-outfit {
-  --font-sans: "Outfit", sans-serif;
+html.font-tiro-bangla {
+  --font-sans: "Tiro Bangla", sans-serif;
 }

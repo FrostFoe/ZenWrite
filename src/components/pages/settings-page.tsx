@@ -29,11 +29,7 @@ const themes = [
   { value: "theme-ocean-mist", label: "Ocean Mist" },
 ];
 
-const fonts = [
-  { value: "font-inter", label: "Inter" },
-  { value: "font-sora", label: "Sora" },
-  { value: "font-outfit", label: "Outfit" },
-];
+const fonts = [{ value: "font-tiro-bangla", label: "Tiro Bangla" }];
 
 export default function SettingsPage() {
   const { settings, setSetting } = useSettings();
@@ -43,20 +39,20 @@ export default function SettingsPage() {
   const handleExport = () => {
     try {
       exportNotes();
-      toast.success("Notes exported successfully!");
+      toast.success("নোট সফলভাবে এক্সপোর্ট করা হয়েছে!");
     } catch (error) {
-      toast.error("Failed to export notes.");
+      toast.error("নোট এক্সপোর্ট করতে ব্যর্থ হয়েছে।");
     }
   };
 
   const handleClearData = () => {
     if (
       window.confirm(
-        "Are you sure you want to delete all your notes? This action cannot be undone.",
+        "আপনি কি নিশ্চিত যে আপনি আপনার সমস্ত নোট মুছে ফেলতে চান? এই ক্রিয়াটি বাতিল করা যাবে না।",
       )
     ) {
       clearAllNotes();
-      toast.success("All notes have been cleared.");
+      toast.success("সমস্ত নোট মুছে ফেলা হয়েছে।");
       router.push("/notes");
     }
   };
@@ -68,30 +64,30 @@ export default function SettingsPage() {
         <div className="h-full space-y-8 p-4 sm:p-6 lg:p-8">
           <header>
             <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-              Settings
+              সেটিংস
             </h1>
             <p className="mt-2 text-muted-foreground">
-              Customize your writing sanctuary.
+              আপনার লেখার স্থান কাস্টমাইজ করুন।
             </p>
           </header>
 
           <div className="grid gap-6 md:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle>Appearance</CardTitle>
+                <CardTitle>সাধারণ</CardTitle>
                 <CardDescription>
-                  Tailor the look and feel of your workspace.
+                  আপনার ওয়ার্কস্পেসের লুক এবং অনুভূতি পরিবর্তন করুন।
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="theme-select">Theme</Label>
+                  <Label htmlFor="theme-select">থিম</Label>
                   <Select
                     value={settings.theme}
                     onValueChange={(value) => setSetting("theme", value)}
                   >
                     <SelectTrigger id="theme-select">
-                      <SelectValue placeholder="Select a theme" />
+                      <SelectValue placeholder="একটি থিম নির্বাচন করুন" />
                     </SelectTrigger>
                     <SelectContent>
                       {themes.map((theme) => (
@@ -103,13 +99,13 @@ export default function SettingsPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="font-select">Font</Label>
+                  <Label htmlFor="font-select">ফন্ট</Label>
                   <Select
                     value={settings.font}
                     onValueChange={(value) => setSetting("font", value)}
                   >
                     <SelectTrigger id="font-select">
-                      <SelectValue placeholder="Select a font" />
+                      <SelectValue placeholder="একটি ফন্ট নির্বাচন করুন" />
                     </SelectTrigger>
                     <SelectContent>
                       {fonts.map((font) => (
@@ -125,21 +121,21 @@ export default function SettingsPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Data Management</CardTitle>
+                <CardTitle>ডেটা ম্যানেজমেন্ট</CardTitle>
                 <CardDescription>
-                  Manage your notes and application data.
+                  আপনার নোট এবং অ্যাপ্লিকেশন ডেটা পরিচালনা করুন।
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <Button onClick={handleExport} variant="outline" className="w-full">
-                  Export All Notes
+                  সমস্ত নোট এক্সপোর্ট করুন
                 </Button>
                 <Button
                   onClick={handleClearData}
                   variant="destructive"
                   className="w-full"
                 >
-                  Clear All Data
+                  সমস্ত ডেটা সাফ করুন
                 </Button>
               </CardContent>
             </Card>

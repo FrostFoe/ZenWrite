@@ -63,7 +63,7 @@ const EditorWrapper = ({
         setCharCount(text.replace(/&nbsp;|<[^>]+>/g, "").length);
       },
       autofocus: true,
-      placeholder: "Let's write an awesome story!",
+      placeholder: "আসুন একটি অসাধারণ গল্প লিখি!",
       tools: EDITOR_TOOLS,
     });
   }, [initialData, setSaveStatus, setCharCount]);

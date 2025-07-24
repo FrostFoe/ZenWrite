@@ -19,7 +19,7 @@ const config = {
     },
     extend: {
       fontFamily: {
-        sans: ["var(--font-sans)"],
+        sans: ["var(--font-tiro-bangla)"],
       },
       colors: {
         border: "hsl(var(--border))",

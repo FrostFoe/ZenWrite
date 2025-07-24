@@ -74,7 +74,7 @@ export default function PomodoroTimer() {
       <DialogContent className="max-w-xs">
         <DialogHeader>
           <DialogTitle className="text-center text-2xl">
-            {mode === "work" ? "Focus Session" : "Take a Break"}
+            {mode === "work" ? "ফোকাস সেশন" : "একটি বিরতি নিন"}
           </DialogTitle>
         </DialogHeader>
         <div className="relative my-8 flex h-48 w-48 items-center justify-center self-center">
@@ -123,7 +123,7 @@ export default function PomodoroTimer() {
             ) : (
               <Play className="mr-2 h-5 w-5" />
             )}
-            {isActive ? "Pause" : "Start"}
+            {isActive ? "বিরতি" : "শুরু"}
           </Button>
           <Button onClick={resetTimer} variant="outline" size="icon">
             <RefreshCw className="h-5 w-5" />

@@ -36,6 +36,17 @@ export default function EditorHeader({
     exit: { opacity: 0, y: -40, transition: { duration: 0.2 } },
   };
 
+  const getSaveStatusText = () => {
+    switch (saveStatus) {
+      case 'saving':
+        return 'সংরক্ষণ করা হচ্ছে...';
+      case 'saved':
+        return 'সংরক্ষিত';
+      default:
+        return 'সংরক্ষিত নয়';
+    }
+  }
+
   return (
     <AnimatePresence>
       {!isZenMode && (
@@ -61,24 +72,18 @@ export default function EditorHeader({
               className="hidden lg:inline-flex"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Notes
+              নোটে ফিরে যান
             </Button>
           </div>
           <div className="flex items-center gap-2">
             <p className="text-sm text-muted-foreground hidden sm:block">
-              {charCount} characters
+              {charCount} অক্ষর
             </p>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              {saveStatus === "saving" ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Saving...
-                </>
-              ) : saveStatus === "saved" ? (
-                "Saved"
-              ) : (
-                "Unsaved"
+              {saveStatus === "saving" && (
+                <Loader2 className="h-4 w-4 animate-spin" />
               )}
+              {getSaveStatusText()}
             </div>
             <Button variant="outline" onClick={onSave} size="icon" aria-label="Save Note">
               <Save className="h-4 w-4" />
