@@ -45,9 +45,6 @@ const EditorWrapper = ({
       data: initialData,
       onReady: () => {
         ejInstance.current = editor;
-        if (initialData.blocks.length === 0) {
-          editor.focus();
-        }
       },
       onChange: async (api) => {
         const content = await api.saver.save();
