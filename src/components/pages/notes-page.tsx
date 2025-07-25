@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, PenSquare } from "lucide-react";
 import { motion } from "framer-motion";
@@ -11,26 +11,37 @@ import { NotesGrid } from "@/components/notes/notes-grid";
 import { NotesList } from "@/components/notes/notes-list";
 import NotesHeader from "@/components/notes/notes-header";
 import { useSettings } from "@/hooks/use-settings";
+import { useNotes } from "@/hooks/use-notes";
 import { cn } from "@/lib/utils";
 import { createNote } from "@/lib/storage";
 import { toast } from "sonner";
+import Loading from "@/app/loading";
 
 type SortOption =
   `${"updatedAt" | "createdAt" | "title" | "charCount"}-${"asc" | "desc"}`;
 type ViewMode = "grid" | "list";
 
-export default function NotesPage({ initialNotes }: { initialNotes: Note[] }) {
-  const [notes] = useState<Note[]>(initialNotes);
+export default function NotesPage({ initialNotes: _ }: { initialNotes: Note[] }) {
+  const router = useRouter();
+  const { notes, isLoading, fetchNotes } = useNotes();
+  const { settings } = useSettings();
   const [sortOption, setSortOption] = useState<SortOption>("updatedAt-desc");
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
-  const { settings } = useSettings();
   const fontClass = settings.font.split(" ")[0];
-  const router = useRouter();
+
+  useEffect(() => {
+    fetchNotes();
+  }, [fetchNotes]);
 
   const handleNewNote = async () => {
-    const noteId = await createNote();
-    toast.success("নতুন নোট তৈরি হয়েছে!");
-    router.push(`/editor/${noteId}`);
+    try {
+      const noteId = await createNote();
+      toast.success("নতুন নোট তৈরি হয়েছে!");
+      router.push(`/editor/${noteId}`);
+    } catch (error) {
+      toast.error("নোট তৈরি করতে ব্যর্থ হয়েছে।");
+      console.error(error);
+    }
   };
 
   const sortedNotes = useMemo(() => {
@@ -46,11 +57,19 @@ export default function NotesPage({ initialNotes }: { initialNotes: Note[] }) {
           : String(valB).localeCompare(String(valA));
       }
 
+      // Ensure consistent numeric comparison
+      const numA = typeof valA === 'number' ? valA : 0;
+      const numB = typeof valB === 'number' ? valB : 0;
+
       return order === "asc"
-        ? (valA as number) - (valB as number)
-        : (valB as number) - (valA as number);
+        ? numA - numB
+        : numB - numA;
     });
   }, [notes, sortOption]);
+
+  if (isLoading) {
+    return <Loading />;
+  }
 
   return (
     <div className="flex h-full bg-background">

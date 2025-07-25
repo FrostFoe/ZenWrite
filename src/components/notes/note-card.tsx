@@ -53,7 +53,7 @@ interface NoteCardProps {
 export function NoteCard({ note }: NoteCardProps) {
   const [formattedDate, setFormattedDate] = React.useState("");
   const { settings } = useSettings();
-  const { trashNote } = useNotes();
+  const { trashNote, updateNote: updateNoteInState } = useNotes();
   const fontClass = settings.font.split(" ")[0];
 
   const [isRenameOpen, setIsRenameOpen] = React.useState(false);
@@ -75,7 +75,7 @@ export function NoteCard({ note }: NoteCardProps) {
     return text.substring(0, 100) + (text.length > 100 ? "..." : "");
   }, [note.content]);
 
-  const handleDelete = () => {
+  const handleTrash = () => {
     trashNote(note.id);
     toast.success("নোটটি ট্র্যাশে পাঠানো হয়েছে।");
   };
@@ -87,7 +87,7 @@ export function NoteCard({ note }: NoteCardProps) {
       return;
     }
     const newContent = { ...note.content };
-    if (newContent.blocks[0]?.type === "header") {
+    if (newContent.blocks.length > 0 && newContent.blocks[0]?.type === "header") {
       newContent.blocks[0].data.text = newTitle;
     } else {
       newContent.blocks.unshift({
@@ -97,7 +97,9 @@ export function NoteCard({ note }: NoteCardProps) {
       });
     }
 
-    await updateNote(note.id, { title: newTitle, content: newContent });
+    const updates = { title: newTitle, content: newContent };
+    await updateNote(note.id, updates);
+    updateNoteInState(note.id, updates); // Update state instantly
     setIsRenameOpen(false);
     toast.success("নোট রিনেম করা হয়েছে।");
   };
@@ -105,12 +107,17 @@ export function NoteCard({ note }: NoteCardProps) {
   const cardVariants = {
     hidden: { opacity: 0, y: 20, scale: 0.95 },
     visible: { opacity: 1, y: 0, scale: 1 },
+    exit: { opacity: 0, y: -20, scale: 0.95 }
   };
 
   return (
     <motion.div
       layout
       variants={cardVariants}
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+      transition={{ duration: 0.3 }}
       whileHover={{ translateY: -5, scale: 1.02 }}
     >
       <Card
@@ -119,8 +126,8 @@ export function NoteCard({ note }: NoteCardProps) {
           fontClass,
         )}
       >
-        <CardHeader className="flex flex-row items-start justify-between">
-          <Link href={`/editor/${note.id}`} className="block w-full">
+        <CardHeader className="flex flex-row items-start justify-between gap-2">
+          <Link href={`/editor/${note.id}`} className="block w-full overflow-hidden">
             <CardTitle className="line-clamp-2 text-xl font-semibold">
               {note.title || "শিরোনামহীন নোট"}
             </CardTitle>
@@ -181,7 +188,7 @@ export function NoteCard({ note }: NoteCardProps) {
                   <AlertDialogFooter>
                     <AlertDialogCancel>বাতিল করুন</AlertDialogCancel>
                     <AlertDialogAction
-                      onClick={handleDelete}
+                      onClick={handleTrash}
                       className="bg-destructive hover:bg-destructive/90"
                     >
                       ট্র্যাশে পাঠান

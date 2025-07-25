@@ -3,14 +3,13 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Note } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import Sidebar from "@/components/nav/sidebar";
 import { useNotes } from "@/hooks/use-notes";
 import Loading from "@/app/loading";
 import { cn } from "@/lib/utils";
 import { useSettings } from "@/hooks/use-settings";
-import { Trash2, RotateCcw, ShieldAlert } from "lucide-react";
+import { Trash2, RotateCcw } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -65,8 +64,10 @@ export default function TrashPage() {
               {trashedNotes.map((note) => (
                 <motion.div
                   key={note.id}
+                  layout
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20, transition: { duration: 0.2 } }}
                   transition={{ duration: 0.3 }}
                   className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-accent"
                 >

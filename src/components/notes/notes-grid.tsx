@@ -1,6 +1,6 @@
 import { Note } from "@/lib/types";
 import { NoteCard } from "./note-card";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface NotesGridProps {
   notes: Note[];
@@ -24,9 +24,11 @@ export function NotesGrid({ notes }: NotesGridProps) {
       animate="visible"
       className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
     >
-      {notes.map((note) => (
-        <NoteCard key={note.id} note={note} />
-      ))}
+      <AnimatePresence>
+        {notes.map((note) => (
+          <NoteCard key={note.id} note={note} />
+        ))}
+      </AnimatePresence>
     </motion.div>
   );
 }
