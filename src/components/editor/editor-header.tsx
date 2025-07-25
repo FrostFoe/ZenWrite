@@ -55,31 +55,30 @@ export default function EditorHeader({
           initial="hidden"
           animate="visible"
           exit="exit"
-          className="fixed top-0 left-0 right-0 z-10 flex h-16 items-center justify-between gap-2 border-b bg-background/80 px-4 backdrop-blur-sm lg:h-auto lg:relative lg:border-none lg:bg-transparent lg:px-0 lg:backdrop-blur-none"
+          className="fixed top-0 left-0 right-0 z-10 flex h-16 items-center justify-between gap-2 border-b bg-background/80 px-4 backdrop-blur-sm lg:relative lg:h-auto lg:border-none lg:bg-transparent lg:px-0 lg:backdrop-blur-none"
         >
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => router.push("/notes")}
-              className="lg:hidden"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => router.push("/notes")}
-              className="hidden lg:inline-flex"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              নোটে ফিরে যান
-            </Button>
-          </div>
-          <div className="flex items-center gap-2">
-            <p className="text-sm text-muted-foreground hidden sm:block">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => router.push("/notes")}
+            className="lg:hidden"
+            aria-label="Back to notes"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={() => router.push("/notes")}
+            className="hidden lg:inline-flex"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            নোটে ফিরে যান
+          </Button>
+          <div className="flex flex-shrink-0 items-center gap-2">
+            <p className="hidden text-sm text-muted-foreground sm:block">
               {charCount} অক্ষর
             </p>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="hidden items-center gap-2 text-sm text-muted-foreground sm:flex">
               {saveStatus === "saving" && (
                 <Loader2 className="h-4 w-4 animate-spin" />
               )}

@@ -12,16 +12,7 @@ export const createNote = async (): Promise<string> => {
     title: "শিরোনামহীন নোট",
     content: {
       time: Date.now(),
-      blocks: [
-        {
-          id: `block_${Date.now()}`,
-          type: "header",
-          data: {
-            text: "শিরোনামহীন নোট",
-            level: 1,
-          },
-        },
-      ],
+      blocks: [], // Start with no blocks
       version: "2.29.1",
     },
     createdAt: Date.now(),
@@ -88,7 +79,8 @@ export const exportNotes = async () => {
 export const getNoteTitle = (data: OutputData): string => {
   const firstBlock = data.blocks[0];
   if (firstBlock && firstBlock.type === "header") {
-    return firstBlock.data.text || "শিরোনামহীন নোট";
+    // Return the text content, stripping any HTML tags
+    return firstBlock.data.text.replace(/<[^>]+>/g, "") || "";
   }
-  return "শিরোনামহীন নোট";
+  return "";
 };

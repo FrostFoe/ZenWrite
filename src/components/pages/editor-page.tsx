@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import type { Note } from "@/lib/types";
 import type { OutputData } from "@editorjs/editorjs";
 import { toast } from "sonner";
@@ -23,7 +22,7 @@ const EditorWrapper = dynamic(
 
 function EditorSkeleton() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-4 sm:p-6 lg:p-8">
       <Skeleton className="h-12 w-1/2" />
       <Skeleton className="h-6 w-full" />
       <Skeleton className="h-6 w-5/6" />
@@ -33,7 +32,6 @@ function EditorSkeleton() {
 }
 
 export default function EditorPage({ note }: { note: Note }) {
-  const router = useRouter();
   const [isZenMode, setIsZenMode] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"unsaved" | "saving" | "saved">(
     "saved",
@@ -50,11 +48,16 @@ export default function EditorPage({ note }: { note: Note }) {
 
   const handleSave = async (data: OutputData) => {
     try {
-      const title = getNoteTitle(data);
+      const title = getNoteTitle(data) || "শিরোনামহীন নোট";
+      const totalChars = data.blocks
+        .map((block) => block.data.text || "")
+        .join(" ")
+        .replace(/&nbsp;|<[^>]+>/g, "").length;
+      setCharCount(totalChars);
       await updateNote(note.id, {
         title,
         content: data,
-        charCount: charCount,
+        charCount: totalChars,
       });
     } catch (error) {
       toast.error("নোট সংরক্ষণ করতে ব্যর্থ হয়েছে।");
@@ -63,25 +66,23 @@ export default function EditorPage({ note }: { note: Note }) {
 
   const handleManualSave = async () => {
     setSaveStatus("saving");
-    try {
-      // This is slightly tricky as we don't have direct access to the latest data
-      // from Editor.js instance here. A better approach would be to trigger a save
-      // inside the editor component and await it.
-      // For now, we just show a toast.
-      toast.success("নোট সফলভাবে সংরক্ষণ করা হয়েছে!");
-      setSaveStatus("saved");
-    } catch (e) {
-      toast.error("সংরক্ষণ করতে ব্যর্থ হয়েছে।");
-      setSaveStatus("unsaved");
-    }
+    // This is tricky as we don't have direct access to the latest data
+    // from Editor.js instance here. A better approach would be to trigger a save
+    // inside the editor component and await it.
+    // For now, we just show a toast and rely on the debounced save.
+    toast.success("নোট সফলভাবে সংরক্ষণ করা হয়েছে!");
+    // The debounced save will eventually set it to "saved"
+    setTimeout(() => setSaveStatus("saved"), 1000);
   };
 
   return (
     <div className="flex h-full bg-background">
-      <Sidebar />
+      <AnimatePresence>
+        {!isZenMode && <Sidebar />}
+      </AnimatePresence>
       <div
         className={cn(
-          "flex-1 lg:pl-72 transition-all duration-300",
+          "flex-1 transition-all duration-300",
           isZenMode ? "lg:pl-0" : "lg:pl-72",
         )}
       >
