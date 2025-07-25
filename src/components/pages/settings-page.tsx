@@ -127,7 +127,11 @@ export default function SettingsPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Button onClick={handleExport} variant="outline" className="w-full">
+                <Button
+                  onClick={handleExport}
+                  variant="outline"
+                  className="w-full"
+                >
                   সমস্ত নোট এক্সপোর্ট করুন
                 </Button>
                 <Button

@@ -1,12 +1,6 @@
 "use client";
 
-import React, {
-  useRef,
-  useEffect,
-  useState,
-  useCallback,
-  memo,
-} from "react";
+import React, { useRef, useEffect, useState, useCallback, memo } from "react";
 import EditorJS, { type OutputData } from "@editorjs/editorjs";
 import { useDebounce } from "use-debounce";
 import { EDITOR_TOOLS } from "@/lib/editorjs/tools";
@@ -82,10 +76,7 @@ const EditorWrapper = ({
 
   useEffect(() => {
     const saveContent = async () => {
-      if (
-        !debouncedEditorData ||
-        debouncedEditorData.blocks.length === 0
-      ) {
+      if (!debouncedEditorData || debouncedEditorData.blocks.length === 0) {
         return;
       }
       setSaveStatus("saving");
@@ -105,12 +96,11 @@ const EditorWrapper = ({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isZenMode, setIsZenMode]);
 
-
   return (
     <div
       className={cn(
         "prose prose-stone dark:prose-invert max-w-full lg:py-8",
-        isZenMode && "prose-lg"
+        isZenMode && "prose-lg",
       )}
     >
       <AnimatePresence>

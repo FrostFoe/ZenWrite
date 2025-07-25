@@ -8,7 +8,7 @@ export function cn(...inputs: ClassValue[]) {
 
 export function getTextFromEditorJS(data: OutputData | undefined): string {
   if (!data || !data.blocks) return "";
-  
+
   let text = "";
   data.blocks.forEach((block) => {
     if (block.data?.text) {

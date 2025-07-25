@@ -40,9 +40,7 @@ export const getNote = async (id: string): Promise<Note | undefined> => {
 // Get all notes
 export const getNotes = async (): Promise<Note[]> => {
   const allKeys = await keys();
-  const noteKeys = allKeys.filter((key) =>
-    String(key).startsWith("note_"),
-  );
+  const noteKeys = allKeys.filter((key) => String(key).startsWith("note_"));
   const notes = await Promise.all(noteKeys.map((key) => get<Note>(key)));
   return notes.filter(Boolean) as Note[];
 };
@@ -66,26 +64,25 @@ export const deleteNote = async (id: string): Promise<void> => {
 
 // Clear all notes
 export const clearAllNotes = async (): Promise<void> => {
-    const allKeys = await keys();
-    const noteKeys = allKeys.filter((key) => String(key).startsWith("note_"));
-    await Promise.all(noteKeys.map(key => del(key)));
-}
+  const allKeys = await keys();
+  const noteKeys = allKeys.filter((key) => String(key).startsWith("note_"));
+  await Promise.all(noteKeys.map((key) => del(key)));
+};
 
 // Export all notes to a JSON file
 export const exportNotes = async () => {
-    const notes = await getNotes();
-    const jsonString = JSON.stringify(notes, null, 2);
-    const blob = new Blob([jsonString], { type: 'application/json' });
-    const href = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = href;
-    link.download = `mnrnotes-backup-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(href);
-}
-
+  const notes = await getNotes();
+  const jsonString = JSON.stringify(notes, null, 2);
+  const blob = new Blob([jsonString], { type: "application/json" });
+  const href = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = href;
+  link.download = `mnrnotes-backup-${new Date().toISOString().split("T")[0]}.json`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(href);
+};
 
 // Utility to get title from Editor.js data
 export const getNoteTitle = (data: OutputData): string => {

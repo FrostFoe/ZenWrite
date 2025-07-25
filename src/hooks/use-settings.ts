@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 interface Settings {
   theme: string;
@@ -33,7 +33,7 @@ const useSettingsStore = create<SettingsState>()(
 
 export const useSettings = () => {
   const [settings, setSettings] = useState(defaultSettings);
-  const storeSettings = useSettingsStore(state => state);
+  const storeSettings = useSettingsStore((state) => state);
 
   useEffect(() => {
     // This effect runs on the client after hydration
@@ -47,21 +47,22 @@ export const useSettings = () => {
   return { settings: settings, setSetting: storeSettings.setSetting };
 };
 
-
 // Apply theme class to HTML element
 if (typeof window !== "undefined") {
   const applyTheme = (state: SettingsState) => {
     const html = document.documentElement;
     const currentClasses = Array.from(html.classList);
-    const themeClasses = currentClasses.filter(c => c.startsWith('theme-') || c.startsWith('font-'));
+    const themeClasses = currentClasses.filter(
+      (c) => c.startsWith("theme-") || c.startsWith("font-"),
+    );
     html.classList.remove(...themeClasses);
     html.classList.add(state.theme);
     html.classList.add(state.font);
   };
-  
+
   // Initial load
   applyTheme(useSettingsStore.getState());
-  
+
   // Subscribe to changes
   useSettingsStore.subscribe(applyTheme);
 }

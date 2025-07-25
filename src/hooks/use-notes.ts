@@ -1,7 +1,12 @@
 "use client";
 
 import { create } from "zustand";
-import { getNotes, createNote as createNoteInDB, deleteNote as deleteNoteInDB, updateNote as updateNoteInDB } from "@/lib/storage";
+import {
+  getNotes,
+  createNote as createNoteInDB,
+  deleteNote as deleteNoteInDB,
+  updateNote as updateNoteInDB,
+} from "@/lib/storage";
 import type { Note } from "@/lib/types";
 
 interface NotesState {
@@ -33,17 +38,17 @@ export const useNotes = create<NotesState>((set, get) => ({
   },
   deleteNote: async (id: string) => {
     await deleteNoteInDB(id);
-    set(state => ({
-        notes: state.notes.filter(note => note.id !== id)
+    set((state) => ({
+      notes: state.notes.filter((note) => note.id !== id),
     }));
   },
   updateNote: async (id: string, updates: Partial<Note>) => {
     await updateNoteInDB(id, updates);
     await get().fetchNotes(); // Re-fetch to get updated note
-  }
+  },
 }));
 
 // Initial fetch
 if (typeof window !== "undefined") {
-    useNotes.getState().fetchNotes();
+  useNotes.getState().fetchNotes();
 }

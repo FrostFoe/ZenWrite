@@ -33,9 +33,7 @@ export default function PomodoroTimer() {
       // Switch modes
       const newMode: TimerMode = mode === "work" ? "break" : "work";
       setMode(newMode);
-      setTimeLeft(
-        newMode === "work" ? WORK_DURATION : BREAK_DURATION,
-      );
+      setTimeLeft(newMode === "work" ? WORK_DURATION : BREAK_DURATION);
       setIsActive(true); // Automatically start next session
     }
 
@@ -56,8 +54,7 @@ export default function PomodoroTimer() {
 
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
-  const totalDuration =
-    mode === "work" ? WORK_DURATION : BREAK_DURATION;
+  const totalDuration = mode === "work" ? WORK_DURATION : BREAK_DURATION;
   const progress = (totalDuration - timeLeft) / totalDuration;
 
   return (

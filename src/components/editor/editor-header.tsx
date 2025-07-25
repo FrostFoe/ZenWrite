@@ -38,14 +38,14 @@ export default function EditorHeader({
 
   const getSaveStatusText = () => {
     switch (saveStatus) {
-      case 'saving':
-        return 'সংরক্ষণ করা হচ্ছে...';
-      case 'saved':
-        return 'সংরক্ষিত';
+      case "saving":
+        return "সংরক্ষণ করা হচ্ছে...";
+      case "saved":
+        return "সংরক্ষিত";
       default:
-        return 'সংরক্ষিত নয়';
+        return "সংরক্ষিত নয়";
     }
-  }
+  };
 
   return (
     <AnimatePresence>
@@ -85,7 +85,12 @@ export default function EditorHeader({
               )}
               {getSaveStatusText()}
             </div>
-            <Button variant="outline" onClick={onSave} size="icon" aria-label="Save Note">
+            <Button
+              variant="outline"
+              onClick={onSave}
+              size="icon"
+              aria-label="Save Note"
+            >
               <Save className="h-4 w-4" />
             </Button>
             <Button

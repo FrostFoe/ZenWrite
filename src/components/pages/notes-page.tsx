@@ -93,7 +93,8 @@ function EmptyState({ onNewNote }: { onNewNote: () => void }) {
         আপনার ক্যানভাস অপেক্ষা করছে
       </h2>
       <p className="mt-2 max-w-sm text-muted-foreground">
-        আপনার প্রথম মাস্টারপিস তৈরি করুন। প্রতিটি মহান গল্প একটি একক শব্দ দিয়ে শুরু হয়।
+        আপনার প্রথম মাস্টারপিস তৈরি করুন। প্রতিটি মহান গল্প একটি একক শব্দ দিয়ে
+        শুরু হয়।
       </p>
       <Button onClick={onNewNote} className="mt-6">
         <Plus className="mr-2 h-4 w-4" /> লেখা শুরু করুন
