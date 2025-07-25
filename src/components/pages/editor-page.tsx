@@ -11,6 +11,7 @@ import EditorHeader from "@/components/editor/editor-header";
 import { Skeleton } from "../ui/skeleton";
 import Sidebar from "../nav/sidebar";
 import { useSettings } from "@/hooks/use-settings";
+import { AnimatePresence } from "framer-motion";
 
 const EditorWrapper = dynamic(
   () => import("@/components/editor/editor-wrapper"),
