@@ -1,11 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Save, Maximize, Loader2, Minus } from "lucide-react";
+import { ArrowLeft, Save, Maximize, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
-import PomodoroTimer from "@/components/pomodoro-timer";
 
 type SaveStatus = "unsaved" | "saving" | "saved";
 
@@ -100,7 +98,6 @@ export default function EditorHeader({
             >
               <Maximize className="h-4 w-4" />
             </Button>
-            <PomodoroTimer />
           </div>
         </motion.header>
       )}
