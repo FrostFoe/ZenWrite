@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import withPWA from "next-pwa";
+import { headers } from "next/headers";
 
 const pwaConfig = withPWA({
   dest: "public",
@@ -27,6 +28,19 @@ const nextConfig: NextConfig = {
         pathname: "/**",
       },
     ],
+  },
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          {
+            key: "Permissions-Policy",
+            value: `keyboard-map=(self "https://notes.mnr.world")`,
+          },
+        ],
+      },
+    ];
   },
 };
 
