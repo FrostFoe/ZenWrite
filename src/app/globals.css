@@ -28,7 +28,7 @@
 
   .theme-vanilla-fog {
     --background: 220 20% 98%;
-    --foreground: 220 15% 10%;
+    --foreground: 220 15% 5%; /* Darker Text */
     --card: 220 20% 100%;
     --card-foreground: 220 15% 10%;
     --popover: 220 20% 100%;
@@ -72,7 +72,7 @@
 
   .theme-ocean-mist {
     --background: 204 45% 96%;
-    --foreground: 215 35% 15%;
+    --foreground: 215 35% 10%; /* Darker Text */
     --card: 204 45% 99%;
     --card-foreground: 215 35% 15%;
     --primary: 195 85% 40%;
@@ -92,7 +92,7 @@
 
   .theme-minty-fresh {
     --background: 140 30% 97%;
-    --foreground: 140 20% 10%;
+    --foreground: 140 20% 5%; /* Darker Text */
     --card: 140 30% 100%;
     --card-foreground: 140 20% 10%;
     --primary: 150 70% 40%;
@@ -132,7 +132,7 @@
 
   .theme-sakura-dream {
     --background: 350 40% 98%;
-    --foreground: 350 25% 15%;
+    --foreground: 350 25% 10%; /* Darker Text */
     --card: 350 40% 100%;
     --card-foreground: 350 25% 15%;
     --primary: 340 80% 65%;
