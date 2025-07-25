@@ -12,6 +12,7 @@ import { Skeleton } from "../ui/skeleton";
 import Sidebar from "../nav/sidebar";
 import { useSettings } from "@/hooks/use-settings";
 import { AnimatePresence } from "framer-motion";
+import AmbientSounds from "../ambient-sounds";
 
 const EditorWrapper = dynamic(
   () => import("@/components/editor/editor-wrapper"),
@@ -89,7 +90,7 @@ export default function EditorPage({ note }: { note: Note }) {
       >
         <div
           className={cn(
-            "mx-auto h-full max-w-5xl px-4 sm:px-6 lg:px-8",
+            "mx-auto h-full max-w-5xl px-4 sm:px-6 lg:px-8 pt-20 lg:pt-0",
             fontClass,
           )}
         >
@@ -111,6 +112,7 @@ export default function EditorPage({ note }: { note: Note }) {
           />
         </div>
       </div>
+      <AmbientSounds />
     </div>
   );
 }
