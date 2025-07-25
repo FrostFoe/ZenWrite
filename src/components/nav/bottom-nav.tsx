@@ -1,22 +1,31 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Home, PenSquare, Settings } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useSettings } from "@/hooks/use-settings";
+import { createNote } from "@/lib/storage";
+import { toast } from "sonner";
+import { Button } from "../ui/button";
 
 const navItems = [
   { href: "/notes", label: "নোট", icon: Home },
-  { href: "/editor/new", label: "নতুন", icon: PenSquare },
   { href: "/settings", label: "সেটিংস", icon: Settings },
 ];
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const { settings } = useSettings();
   const fontClass = settings.font.split(" ")[0];
+
+  const handleNewNote = async () => {
+    const noteId = await createNote();
+    toast.success("নতুন নোট তৈরি হয়েছে!");
+    router.push(`/editor/${noteId}`);
+  };
 
   if (pathname.startsWith("/editor/")) {
     return null;
@@ -61,6 +70,26 @@ export default function BottomNav() {
               </Link>
             );
           })}
+          <Button
+            onClick={handleNewNote}
+            variant="ghost"
+            className={cn(
+              "relative flex flex-col items-center gap-1.5 rounded-lg p-2 text-sm transition-colors h-auto",
+              pathname.startsWith("/editor/new")
+                ? `text-primary ${fontClass}`
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <PenSquare className="h-6 w-6" />
+            <span className="font-medium">নতুন</span>
+            {pathname.startsWith("/editor/new") && (
+              <motion.div
+                layoutId="active-nav-item"
+                className="absolute -bottom-1 h-1 w-8 rounded-full bg-primary"
+                transition={{ type: "spring", stiffness: 500, damping: 40 }}
+              />
+            )}
+          </Button>
         </nav>
       </motion.div>
     </AnimatePresence>

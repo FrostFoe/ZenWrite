@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Plus, PenSquare } from "lucide-react";
 import { motion } from "framer-motion";
 import { Note } from "@/lib/types";
@@ -12,6 +12,8 @@ import { NotesList } from "@/components/notes/notes-list";
 import NotesHeader from "@/components/notes/notes-header";
 import { useSettings } from "@/hooks/use-settings";
 import { cn } from "@/lib/utils";
+import { createNote } from "@/lib/storage";
+import { toast } from "sonner";
 
 type SortOption =
   `${"updatedAt" | "createdAt" | "title" | "charCount"}-${"asc" | "desc"}`;
@@ -23,6 +25,13 @@ export default function NotesPage({ initialNotes }: { initialNotes: Note[] }) {
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const { settings } = useSettings();
   const fontClass = settings.font.split(" ")[0];
+  const router = useRouter();
+
+  const handleNewNote = async () => {
+    const noteId = await createNote();
+    toast.success("নতুন নোট তৈরি হয়েছে!");
+    router.push(`/editor/${noteId}`);
+  };
 
   const sortedNotes = useMemo(() => {
     return [...notes].sort((a, b) => {
@@ -61,7 +70,7 @@ export default function NotesPage({ initialNotes }: { initialNotes: Note[] }) {
               <NotesList notes={sortedNotes} />
             )
           ) : (
-            <EmptyState />
+            <EmptyState onNewNote={handleNewNote} />
           )}
         </div>
       </div>
@@ -69,7 +78,7 @@ export default function NotesPage({ initialNotes }: { initialNotes: Note[] }) {
   );
 }
 
-function EmptyState() {
+function EmptyState({ onNewNote }: { onNewNote: () => void }) {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -86,10 +95,8 @@ function EmptyState() {
       <p className="mt-2 max-w-sm text-muted-foreground">
         আপনার প্রথম মাস্টারপিস তৈরি করুন। প্রতিটি মহান গল্প একটি একক শব্দ দিয়ে শুরু হয়।
       </p>
-      <Button asChild className="mt-6">
-        <Link href="/editor/new">
-          <Plus className="mr-2 h-4 w-4" /> লেখা শুরু করুন
-        </Link>
+      <Button onClick={onNewNote} className="mt-6">
+        <Plus className="mr-2 h-4 w-4" /> লেখা শুরু করুন
       </Button>
     </motion.div>
   );

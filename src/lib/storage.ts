@@ -3,14 +3,9 @@
 import { Note } from "./types";
 import { get, set, del, keys } from "idb-keyval";
 import type { OutputData } from "@editorjs/editorjs";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-
-const NOTES_KEY = "mnrnotes";
 
 // Create a new note
 export const createNote = async (): Promise<string> => {
-  const router = useRouter();
   const id = `note_${Date.now()}`;
   const newNote: Note = {
     id,
@@ -34,40 +29,11 @@ export const createNote = async (): Promise<string> => {
     charCount: 0,
   };
   await set(id, newNote);
-  toast.success("নতুন নোট তৈরি হয়েছে!");
-  router.push(`/editor/${id}`);
-  router.refresh(); // Refresh server components
   return id;
 };
 
 // Get a single note by ID
 export const getNote = async (id: string): Promise<Note | undefined> => {
-  if (id === "new") {
-    const newId = `note_${Date.now()}`;
-    const newNote: Note = {
-      id: newId,
-      title: "শিরোনামহীন নোট",
-      content: {
-        time: Date.now(),
-        blocks: [
-          {
-            id: `block_${Date.now()}`,
-            type: "header",
-            data: {
-              text: "শিরোনামহীন নোট",
-              level: 1,
-            },
-          },
-        ],
-        version: "2.29.1",
-      },
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      charCount: 0,
-    };
-    await set(newId, newNote);
-    return { ...newNote, isNew: true } as Note & { isNew: boolean };
-  }
   return get(id);
 };
 

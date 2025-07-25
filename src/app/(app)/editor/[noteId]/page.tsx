@@ -17,9 +17,17 @@ export default function Page() {
   useEffect(() => {
     if (!noteId) return;
 
+    if (noteId === 'new') {
+        // This case should ideally not be hit with the new flow,
+        // but as a fallback, we redirect to notes.
+        router.replace('/notes');
+        return;
+    }
+
     const fetchNote = async () => {
       const fetchedNote = await getNote(noteId);
       if (!fetchedNote) {
+        // If no note is found, redirect to the main notes page.
         router.replace("/notes");
       } else {
         setNote(fetchedNote);
