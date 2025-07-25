@@ -137,7 +137,7 @@ export default function NotesPage({
               damping: 20,
               delay: 0.5,
             }}
-            className="fixed bottom-8 right-8 z-50"
+            className="fixed bottom-28 right-4 z-50 lg:bottom-8 lg:right-8"
           >
             <Button
               onClick={handleNewNote}
@@ -201,5 +201,3 @@ function EmptyState({
     </motion.div>
   );
 }
-
-    
