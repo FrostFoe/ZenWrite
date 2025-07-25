@@ -4,22 +4,30 @@ import { create } from "zustand";
 import {
   getNotes,
   createNote as createNoteInDB,
-  deleteNote as deleteNoteInDB,
+  trashNote as trashNoteInDB,
   updateNote as updateNoteInDB,
+  getTrashedNotes,
+  restoreNote as restoreNoteInDB,
+  deleteNotePermanently as deleteNotePermanentlyInDB,
 } from "@/lib/storage";
 import type { Note } from "@/lib/types";
 
 interface NotesState {
   notes: Note[];
+  trashedNotes: Note[];
   isLoading: boolean;
   fetchNotes: () => Promise<void>;
+  fetchTrashedNotes: () => Promise<void>;
   createNote: () => Promise<string>;
-  deleteNote: (id: string) => Promise<void>;
+  trashNote: (id: string) => Promise<void>;
   updateNote: (id: string, updates: Partial<Note>) => Promise<void>;
+  restoreNote: (id: string) => Promise<void>;
+  deleteNotePermanently: (id: string) => Promise<void>;
 }
 
 export const useNotes = create<NotesState>((set, get) => ({
   notes: [],
+  trashedNotes: [],
   isLoading: true,
   fetchNotes: async () => {
     set({ isLoading: true });
@@ -31,13 +39,23 @@ export const useNotes = create<NotesState>((set, get) => ({
       set({ isLoading: false });
     }
   },
+  fetchTrashedNotes: async () => {
+    set({ isLoading: true });
+    try {
+      const trashedNotes = await getTrashedNotes();
+      set({ trashedNotes, isLoading: false });
+    } catch (error) {
+      console.error("Failed to fetch trashed notes:", error);
+      set({ isLoading: false });
+    }
+  },
   createNote: async () => {
     const newNoteId = await createNoteInDB();
     await get().fetchNotes(); // Re-fetch notes to include the new one
     return newNoteId;
   },
-  deleteNote: async (id: string) => {
-    await deleteNoteInDB(id);
+  trashNote: async (id: string) => {
+    await trashNoteInDB(id);
     set((state) => ({
       notes: state.notes.filter((note) => note.id !== id),
     }));
@@ -45,6 +63,17 @@ export const useNotes = create<NotesState>((set, get) => ({
   updateNote: async (id: string, updates: Partial<Note>) => {
     await updateNoteInDB(id, updates);
     await get().fetchNotes(); // Re-fetch to get updated note
+  },
+  restoreNote: async (id: string) => {
+    await restoreNoteInDB(id);
+    await get().fetchNotes();
+    await get().fetchTrashedNotes();
+  },
+  deleteNotePermanently: async (id: string) => {
+    await deleteNotePermanentlyInDB(id);
+    set((state) => ({
+      trashedNotes: state.trashedNotes.filter((note) => note.id !== id),
+    }));
   },
 }));
 

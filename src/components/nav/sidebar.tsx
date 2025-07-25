@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, PenSquare, Settings } from "lucide-react";
+import { Home, PenSquare, Settings, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useSettings } from "@/hooks/use-settings";
@@ -11,6 +11,7 @@ import { toast } from "sonner";
 
 const navItems = [
   { href: "/notes", label: "নোট সমূহ", icon: Home },
+  { href: "/trash", label: "ট্র্যাশ", icon: Trash2 },
   { href: "/settings", label: "সেটিংস", icon: Settings },
 ];
 
@@ -21,9 +22,13 @@ export default function Sidebar() {
   const fontClass = settings.font.split(" ")[0];
 
   const handleNewNote = async () => {
-    const noteId = await createNote();
-    toast.success("নতুন নোট তৈরি হয়েছে!");
-    router.push(`/editor/${noteId}`);
+    try {
+      const noteId = await createNote();
+      toast.success("নতুন নোট তৈরি হয়েছে!");
+      router.push(`/editor/${noteId}`);
+    } catch (error) {
+      toast.error("নোট তৈরি করতে ব্যর্থ হয়েছে।");
+    }
   };
 
   return (
@@ -50,7 +55,7 @@ export default function Sidebar() {
                 {navItems.map((item) => {
                   const isActive =
                     item.href === "/notes"
-                      ? pathname === item.href
+                      ? pathname === item.href || pathname.startsWith("/editor")
                       : pathname.startsWith(item.href);
                   return (
                     <li key={item.label}>

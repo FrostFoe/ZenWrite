@@ -1,0 +1,151 @@
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { Note } from "@/lib/types";
+import { Button } from "@/components/ui/button";
+import Sidebar from "@/components/nav/sidebar";
+import { useNotes } from "@/hooks/use-notes";
+import Loading from "@/app/loading";
+import { cn } from "@/lib/utils";
+import { useSettings } from "@/hooks/use-settings";
+import { Trash2, RotateCcw, ShieldAlert } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
+import { formatDistanceToNow } from "date-fns";
+import { bn } from "date-fns/locale";
+
+export default function TrashPage() {
+  const { trashedNotes, isLoading, fetchTrashedNotes, restoreNote, deleteNotePermanently } = useNotes();
+  const { settings } = useSettings();
+  const router = useRouter();
+
+  useEffect(() => {
+    fetchTrashedNotes();
+  }, [fetchTrashedNotes]);
+
+  const handleRestore = async (id: string) => {
+    await restoreNote(id);
+    toast.success("নোটটি পুনরুদ্ধার করা হয়েছে!");
+  };
+
+  const handleDelete = async (id: string) => {
+    await deleteNotePermanently(id);
+    toast.success("নোটটি স্থায়ীভাবে ডিলিট করা হয়েছে।");
+  };
+
+  if (isLoading) {
+    return <Loading />;
+  }
+
+  return (
+    <div className="flex h-full bg-background">
+      <Sidebar />
+      <div className={cn("flex-1 lg:pl-72", settings.font.split(" ")[0])}>
+        <div className="h-full space-y-8 p-4 sm:p-6 lg:p-8">
+          <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <h1 className={cn("text-3xl font-bold tracking-tight text-foreground sm:text-4xl", settings.font.split(" ")[0])}>
+              ট্র্যাশ
+            </h1>
+          </header>
+
+          {trashedNotes.length > 0 ? (
+            <div className="space-y-4">
+              {trashedNotes.map((note) => (
+                <motion.div
+                  key={note.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-accent"
+                >
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-foreground">
+                      {note.title || "শিরোনামহীন নোট"}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      ট্র্যাশে পাঠানো হয়েছে: {formatDistanceToNow(new Date(note.updatedAt), { addSuffix: true, locale: bn })}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleRestore(note.id)}
+                      aria-label="Restore note"
+                    >
+                      <RotateCcw className="h-5 w-5" />
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive hover:text-destructive"
+                          aria-label="Delete permanently"
+                        >
+                          <Trash2 className="h-5 w-5" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>আপনি কি নিশ্চিত?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            এই নোটটি স্থায়ীভাবে ডিলিট করা হবে। এই ক্রিয়াটি বাতিল করা যাবে না।
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>বাতিল করুন</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDelete(note.id)}
+                            className="bg-destructive hover:bg-destructive/90"
+                          >
+                            স্থায়ীভাবে ডিলিট করুন
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <EmptyTrashState />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EmptyTrashState() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5, type: "spring" }}
+      className="flex h-full min-h-[50vh] flex-col items-center justify-center rounded-xl border border-dashed bg-muted/50 p-8 text-center"
+    >
+      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+        <Trash2 className="h-8 w-8 text-primary" />
+      </div>
+      <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+        ট্র্যাশ খালি
+      </h2>
+      <p className="mt-2 max-w-sm text-muted-foreground">
+        আপনি যখন কোনো নোট ডিলিট করবেন, তখন সেটি এখানে এসে জমা হবে।
+      </p>
+    </motion.div>
+  );
+}

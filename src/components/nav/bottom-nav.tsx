@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, PenSquare, Settings } from "lucide-react";
+import { Home, PenSquare, Settings, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useSettings } from "@/hooks/use-settings";
@@ -12,6 +12,7 @@ import { Button } from "../ui/button";
 
 const navItems = [
   { href: "/notes", label: "নোট", icon: Home },
+  { href: "/trash", label: "ট্র্যাশ", icon: Trash2 },
   { href: "/settings", label: "সেটিংস", icon: Settings },
 ];
 
@@ -22,9 +23,13 @@ export default function BottomNav() {
   const fontClass = settings.font.split(" ")[0];
 
   const handleNewNote = async () => {
-    const noteId = await createNote();
-    toast.success("নতুন নোট তৈরি হয়েছে!");
-    router.push(`/editor/${noteId}`);
+    try {
+      const noteId = await createNote();
+      toast.success("নতুন নোট তৈরি হয়েছে!");
+      router.push(`/editor/${noteId}`);
+    } catch (error) {
+      toast.error("নোট তৈরি করতে ব্যর্থ হয়েছে।");
+    }
   };
 
   if (pathname.startsWith("/editor/")) {

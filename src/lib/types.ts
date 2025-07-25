@@ -10,6 +10,7 @@ export interface Note {
   tags?: string[];
   collectionId?: string;
   coverImage?: string; // base64 or a local URL
+  isTrashed: boolean;
 }
 
 export interface Collection {

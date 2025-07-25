@@ -9,7 +9,7 @@ export const createNote = async (): Promise<string> => {
   const id = `note_${Date.now()}`;
   const newNote: Note = {
     id,
-    title: "শিরোনামহীন নোট",
+    title: "", // Start with empty title
     content: {
       time: Date.now(),
       blocks: [], // Start with no blocks
@@ -18,6 +18,7 @@ export const createNote = async (): Promise<string> => {
     createdAt: Date.now(),
     updatedAt: Date.now(),
     charCount: 0,
+    isTrashed: false,
   };
   await set(id, newNote);
   return id;
@@ -28,12 +29,24 @@ export const getNote = async (id: string): Promise<Note | undefined> => {
   return get(id);
 };
 
-// Get all notes
+// Get all active notes
 export const getNotes = async (): Promise<Note[]> => {
   const allKeys = await keys();
   const noteKeys = allKeys.filter((key) => String(key).startsWith("note_"));
   const notes = await Promise.all(noteKeys.map((key) => get<Note>(key)));
-  return notes.filter(Boolean) as Note[];
+  return notes
+    .filter((note): note is Note => !!note && !note.isTrashed)
+    .sort((a, b) => b.updatedAt - a.updatedAt);
+};
+
+// Get all trashed notes
+export const getTrashedNotes = async (): Promise<Note[]> => {
+  const allKeys = await keys();
+  const noteKeys = allKeys.filter((key) => String(key).startsWith("note_"));
+  const notes = await Promise.all(noteKeys.map((key) => get<Note>(key)));
+  return notes
+    .filter((note): note is Note => !!note && note.isTrashed)
+    .sort((a, b) => b.updatedAt - a.updatedAt);
 };
 
 // Update a note
@@ -48,8 +61,18 @@ export const updateNote = async (
   }
 };
 
-// Delete a note
-export const deleteNote = async (id: string): Promise<void> => {
+// Move a note to trash
+export const trashNote = async (id: string): Promise<void> => {
+  await updateNote(id, { isTrashed: true });
+};
+
+// Restore a note from trash
+export const restoreNote = async (id: string): Promise<void> => {
+  await updateNote(id, { isTrashed: false });
+};
+
+// Delete a note permanently
+export const deleteNotePermanently = async (id: string): Promise<void> => {
   await del(id);
 };
 

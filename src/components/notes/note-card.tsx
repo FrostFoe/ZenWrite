@@ -27,7 +27,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
   Dialog,
@@ -53,7 +52,7 @@ interface NoteCardProps {
 export function NoteCard({ note }: NoteCardProps) {
   const [formattedDate, setFormattedDate] = React.useState("");
   const { settings } = useSettings();
-  const { deleteNote: deleteNoteFromStore } = useNotes();
+  const { trashNote } = useNotes();
   const fontClass = settings.font.split(" ")[0];
 
   const [isRenameOpen, setIsRenameOpen] = React.useState(false);
@@ -76,8 +75,8 @@ export function NoteCard({ note }: NoteCardProps) {
   }, [note.content]);
 
   const handleDelete = () => {
-    deleteNoteFromStore(note.id);
-    toast.success("নোট ডিলিট করা হয়েছে।");
+    trashNote(note.id);
+    toast.success("নোটটি ট্র্যাশে পাঠানো হয়েছে।");
   };
 
   const handleRename = async (e: React.FormEvent) => {
@@ -168,15 +167,14 @@ export function NoteCard({ note }: NoteCardProps) {
                     onSelect={(e) => e.preventDefault()}
                   >
                     <Trash2 className="mr-2 h-4 w-4" />
-                    <span>ডিলিট করুন</span>
+                    <span>ট্র্যাশে পাঠান</span>
                   </DropdownMenuItem>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
                     <AlertDialogTitle>আপনি কি নিশ্চিত?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      এই নোটটি ডিলিট করলে আর ফেরত পাওয়া যাবে না। আপনি কি সত্যিই
-                      এটি ডিলিট করতে চান?
+                      এই নোটটি ট্র্যাশে পাঠানো হবে। আপনি ট্র্যাশ থেকে এটি পুনরুদ্ধার করতে পারবেন।
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
@@ -185,7 +183,7 @@ export function NoteCard({ note }: NoteCardProps) {
                       onClick={handleDelete}
                       className="bg-destructive hover:bg-destructive/90"
                     >
-                      ডিলিট করুন
+                      ট্র্যাশে পাঠান
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
