@@ -1,13 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { Home, PenSquare, Settings, Trash2 } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { Home, Settings, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import { useSettings } from "@/hooks/use-settings";
-import { createNote } from "@/lib/storage";
-import { toast } from "sonner";
 
 const navItems = [
   { href: "/notes", label: "নোট সমূহ", icon: Home },
@@ -17,19 +14,8 @@ const navItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const router = useRouter();
   const { settings } = useSettings();
   const fontClass = settings.font.split(" ")[0];
-
-  const handleNewNote = async () => {
-    try {
-      const noteId = await createNote();
-      toast.success("নতুন নোট তৈরি হয়েছে!");
-      router.push(`/editor/${noteId}`);
-    } catch (error) {
-      toast.error("নোট তৈরি করতে ব্যর্থ হয়েছে।");
-    }
-  };
 
   return (
     <aside className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
@@ -41,15 +27,6 @@ export default function Sidebar() {
         </div>
         <nav className="flex flex-1 flex-col">
           <ul role="list" className="flex flex-1 flex-col gap-y-7">
-            <li>
-              <Button
-                onClick={handleNewNote}
-                className="w-full justify-start text-lg h-12"
-              >
-                <PenSquare className="mr-3 h-5 w-5" />
-                নতুন নোট
-              </Button>
-            </li>
             <li>
               <ul role="list" className="-mx-2 space-y-1">
                 {navItems.map((item) => {
@@ -82,3 +59,5 @@ export default function Sidebar() {
     </aside>
   );
 }
+
+    

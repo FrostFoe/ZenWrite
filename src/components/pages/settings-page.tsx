@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import { useSettings } from "@/hooks/use-settings";
 import {
   Card,
@@ -18,10 +19,15 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { clearAllNotes, exportNotes } from "@/lib/storage";
+import {
+  clearAllNotes,
+  exportNotes,
+  importNotes,
+} from "@/lib/storage";
 import { useRouter } from "next/navigation";
 import Sidebar from "../nav/sidebar";
 import { cn } from "@/lib/utils";
+import { useNotes } from "@/hooks/use-notes";
 
 const themes = [
   { value: "theme-vanilla-fog", label: "Vanilla Fog" },
@@ -42,6 +48,8 @@ export default function SettingsPage() {
   const { settings, setSetting } = useSettings();
   const router = useRouter();
   const fontClass = settings.font.split(" ")[0];
+  const importInputRef = useRef<HTMLInputElement>(null);
+  const { addImportedNotes } = useNotes();
 
   const handleExport = () => {
     try {
@@ -49,6 +57,28 @@ export default function SettingsPage() {
       toast.success("নোট সফলভাবে এক্সপোর্ট করা হয়েছে!");
     } catch (error) {
       toast.error("নোট এক্সপোর্ট করতে ব্যর্থ হয়েছে।");
+    }
+  };
+
+  const handleImportClick = () => {
+    importInputRef.current?.click();
+  };
+
+  const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      try {
+        const imported = await importNotes(file);
+        addImportedNotes(imported);
+        toast.success(`${imported.length} টি নোট সফলভাবে ইমপোর্ট করা হয়েছে!`);
+      } catch (error) {
+        toast.error("নোট ইমপোর্ট করতে ব্যর্থ হয়েছে। ফাইল ফরম্যাট সঠিক কিনা তা পরীক্ষা করুন।");
+        console.error(error);
+      } finally {
+        if (importInputRef.current) {
+          importInputRef.current.value = "";
+        }
+      }
     }
   };
 
@@ -60,7 +90,7 @@ export default function SettingsPage() {
     ) {
       clearAllNotes();
       toast.success("সমস্ত নোট মুছে ফেলা হয়েছে।");
-      router.push("/notes");
+      router.push("/notes"); // Redirect to a clean slate
     }
   };
 
@@ -134,6 +164,20 @@ export default function SettingsPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                 <Button
+                  onClick={handleImportClick}
+                  variant="outline"
+                  className="w-full"
+                >
+                  নোট ইমপোর্ট করুন
+                </Button>
+                <input
+                  type="file"
+                  ref={importInputRef}
+                  onChange={handleFileImport}
+                  className="hidden"
+                  accept=".json"
+                />
                 <Button
                   onClick={handleExport}
                   variant="outline"
@@ -156,3 +200,5 @@ export default function SettingsPage() {
     </div>
   );
 }
+
+    

@@ -1,14 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { Home, PenSquare, Settings, Trash2 } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { Home, Settings, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useSettings } from "@/hooks/use-settings";
-import { createNote } from "@/lib/storage";
-import { toast } from "sonner";
-import { Button } from "../ui/button";
 
 const navItems = [
   { href: "/notes", label: "নোট", icon: Home },
@@ -18,19 +15,8 @@ const navItems = [
 
 export default function BottomNav() {
   const pathname = usePathname();
-  const router = useRouter();
   const { settings } = useSettings();
   const fontClass = settings.font.split(" ")[0];
-
-  const handleNewNote = async () => {
-    try {
-      const noteId = await createNote();
-      toast.success("নতুন নোট তৈরি হয়েছে!");
-      router.push(`/editor/${noteId}`);
-    } catch (error) {
-      toast.error("নোট তৈরি করতে ব্যর্থ হয়েছে।");
-    }
-  };
 
   if (pathname.startsWith("/editor/")) {
     return null;
@@ -75,28 +61,10 @@ export default function BottomNav() {
               </Link>
             );
           })}
-          <Button
-            onClick={handleNewNote}
-            variant="ghost"
-            className={cn(
-              "relative flex flex-col items-center gap-1.5 rounded-lg p-2 text-sm transition-colors h-auto",
-              pathname.startsWith("/editor/new")
-                ? `text-primary ${fontClass}`
-                : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            <PenSquare className="h-6 w-6" />
-            <span className="font-medium">নতুন</span>
-            {pathname.startsWith("/editor/new") && (
-              <motion.div
-                layoutId="active-nav-item"
-                className="absolute -bottom-1 h-1 w-8 rounded-full bg-primary"
-                transition={{ type: "spring", stiffness: 500, damping: 40 }}
-              />
-            )}
-          </Button>
         </nav>
       </motion.div>
     </AnimatePresence>
   );
 }
+
+    

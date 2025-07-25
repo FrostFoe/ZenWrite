@@ -1,7 +1,7 @@
 "use client";
 
 import { Note } from "./types";
-import { get, set, del, keys } from "idb-keyval";
+import { get, set, del, keys, setMany } from "idb-keyval";
 import type { OutputData } from "@editorjs/editorjs";
 
 // Create a new note
@@ -9,10 +9,10 @@ export const createNote = async (): Promise<string> => {
   const id = `note_${Date.now()}`;
   const newNote: Note = {
     id,
-    title: "শিরোনামহীন নোট", // Default title
+    title: "শিরোনামহীন নোট",
     content: {
       time: Date.now(),
-      blocks: [], // Start with no blocks
+      blocks: [],
       version: "2.29.1",
     },
     createdAt: Date.now(),
@@ -85,25 +85,81 @@ export const clearAllNotes = async (): Promise<void> => {
 
 // Export all notes to a JSON file
 export const exportNotes = async () => {
-  const notes = await getNotes();
-  const jsonString = JSON.stringify(notes, null, 2);
+  const allNotes = await getNotes();
+  const trashedNotes = await getTrashedNotes();
+  const dataToExport = {
+    notes: allNotes,
+    trashed: trashedNotes,
+  };
+  const jsonString = JSON.stringify(dataToExport, null, 2);
   const blob = new Blob([jsonString], { type: "application/json" });
   const href = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = href;
-  link.download = `mnrnotes-backup-${new Date().toISOString().split("T")[0]}.json`;
+  link.download = `amar-note-backup-${new Date().toISOString().split("T")[0]}.json`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(href);
 };
 
+// Import notes from a JSON file
+export const importNotes = (file: File): Promise<Note[]> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const jsonString = event.target?.result as string;
+        const data = JSON.parse(jsonString);
+        
+        // Handle both old and new export formats
+        const notesToImport = Array.isArray(data) ? data : (data.notes || []);
+
+        if (!Array.isArray(notesToImport)) {
+          throw new Error("Invalid file format: 'notes' array not found.");
+        }
+
+        const validatedNotes: Note[] = [];
+        for (const noteData of notesToImport) {
+          // Basic validation
+          if (noteData.id && noteData.title && noteData.content) {
+            const newNote: Note = {
+              id: noteData.id,
+              title: noteData.title,
+              content: noteData.content,
+              createdAt: noteData.createdAt || Date.now(),
+              updatedAt: noteData.updatedAt || Date.now(),
+              charCount: noteData.charCount || 0,
+              isTrashed: noteData.isTrashed || false,
+            };
+            validatedNotes.push(newNote);
+          }
+        }
+
+        if (validatedNotes.length > 0) {
+          const entries: [IDBValidKey, Note][] = validatedNotes.map(note => [note.id, note]);
+          await setMany(entries);
+        }
+        
+        resolve(validatedNotes);
+      } catch (error) {
+        console.error("Error parsing or importing notes:", error);
+        reject(error);
+      }
+    };
+    reader.onerror = (error) => reject(error);
+    reader.readAsText(file);
+  });
+};
+
+
 // Utility to get title from Editor.js data
 export const getNoteTitle = (data: OutputData): string => {
   const firstBlock = data.blocks[0];
   if (firstBlock && firstBlock.type === "header") {
-    // Return the text content, stripping any HTML tags
-    return firstBlock.data.text.replace(/<[^>]+>/g, "") || "";
+    return firstBlock.data.text.replace(/<[^>]+>/g, "") || "শিরোনামহীন নোট";
   }
-  return "";
+  return "শিরোনামহীন নোট";
 };
+
+    

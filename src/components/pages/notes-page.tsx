@@ -1,19 +1,19 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, PenSquare } from "lucide-react";
+import { Plus } from "lucide-react";
 import { motion } from "framer-motion";
 import { Note } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import Sidebar from "@/components/nav/sidebar";
 import { NotesGrid } from "@/components/notes/notes-grid";
-import { NotesList } from "@/components/notes/notes-list";
+import { NotesList as NotesListView } from "@/components/notes/notes-list";
 import NotesHeader from "@/components/notes/notes-header";
 import { useSettings } from "@/hooks/use-settings";
 import { useNotes } from "@/hooks/use-notes";
 import { cn } from "@/lib/utils";
-import { createNote } from "@/lib/storage";
+import { createNote, importNotes } from "@/lib/storage";
 import { toast } from "sonner";
 import Loading from "@/app/loading";
 
@@ -21,13 +21,18 @@ type SortOption =
   `${"updatedAt" | "createdAt" | "title" | "charCount"}-${"asc" | "desc"}`;
 type ViewMode = "grid" | "list";
 
-export default function NotesPage({ initialNotes: _ }: { initialNotes: Note[] }) {
+export default function NotesPage({
+  initialNotes: _,
+}: {
+  initialNotes: Note[];
+}) {
   const router = useRouter();
-  const { notes, isLoading, fetchNotes } = useNotes();
+  const { notes, isLoading, fetchNotes, addImportedNotes } = useNotes();
   const { settings } = useSettings();
   const [sortOption, setSortOption] = useState<SortOption>("updatedAt-desc");
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const fontClass = settings.font.split(" ")[0];
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchNotes();
@@ -44,6 +49,31 @@ export default function NotesPage({ initialNotes: _ }: { initialNotes: Note[] })
     }
   };
 
+  const handleImportClick = () => {
+    importInputRef.current?.click();
+  };
+
+  const handleFileImport = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      try {
+        const imported = await importNotes(file);
+        addImportedNotes(imported);
+        toast.success(`${imported.length} টি নোট সফলভাবে ইমপোর্ট করা হয়েছে!`);
+      } catch (error) {
+        toast.error("নোট ইমপোর্ট করতে ব্যর্থ হয়েছে। ফাইল ফরম্যাট সঠিক কিনা তা পরীক্ষা করুন।");
+        console.error(error);
+      } finally {
+        // Reset file input
+        if (importInputRef.current) {
+          importInputRef.current.value = "";
+        }
+      }
+    }
+  };
+
   const sortedNotes = useMemo(() => {
     return [...notes].sort((a, b) => {
       const [key, order] = sortOption.split("-");
@@ -57,13 +87,10 @@ export default function NotesPage({ initialNotes: _ }: { initialNotes: Note[] })
           : String(valB).localeCompare(String(valA));
       }
 
-      // Ensure consistent numeric comparison
-      const numA = typeof valA === 'number' ? valA : 0;
-      const numB = typeof valB === 'number' ? valB : 0;
+      const numA = typeof valA === "number" ? valA : 0;
+      const numB = typeof valB === "number" ? valB : 0;
 
-      return order === "asc"
-        ? numA - numB
-        : numB - numA;
+      return order === "asc" ? numA - numB : numB - numA;
     });
   }, [notes, sortOption]);
 
@@ -75,7 +102,7 @@ export default function NotesPage({ initialNotes: _ }: { initialNotes: Note[] })
     <div className="flex h-full bg-background">
       <Sidebar />
       <div className={cn("flex-1 lg:pl-72", fontClass)}>
-        <div className="h-full space-y-8 p-4 sm:p-6 lg:p-8">
+        <div className="relative h-full space-y-8 p-4 sm:p-6 lg:p-8">
           <NotesHeader
             sortOption={sortOption}
             setSortOption={setSortOption}
@@ -86,18 +113,53 @@ export default function NotesPage({ initialNotes: _ }: { initialNotes: Note[] })
             viewMode === "grid" ? (
               <NotesGrid notes={sortedNotes} />
             ) : (
-              <NotesList notes={sortedNotes} />
+              <NotesListView notes={sortedNotes} />
             )
           ) : (
-            <EmptyState onNewNote={handleNewNote} />
+            <EmptyState
+              onNewNote={handleNewNote}
+              onImportClick={handleImportClick}
+            />
           )}
+          <input
+            type="file"
+            ref={importInputRef}
+            onChange={handleFileImport}
+            className="hidden"
+            accept=".json"
+          />
+          <motion.div
+            initial={{ scale: 0, opacity: 0, y: 100 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            transition={{
+              type: "spring",
+              stiffness: 260,
+              damping: 20,
+              delay: 0.5,
+            }}
+            className="fixed bottom-8 right-8 z-50"
+          >
+            <Button
+              onClick={handleNewNote}
+              className="h-16 w-16 rounded-full shadow-2xl"
+              aria-label="Create new note"
+            >
+              <Plus className="h-8 w-8" />
+            </Button>
+          </motion.div>
         </div>
       </div>
     </div>
   );
 }
 
-function EmptyState({ onNewNote }: { onNewNote: () => void }) {
+function EmptyState({
+  onNewNote,
+  onImportClick,
+}: {
+  onNewNote: () => void;
+  onImportClick: () => void;
+}) {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -106,18 +168,38 @@ function EmptyState({ onNewNote }: { onNewNote: () => void }) {
       className="flex h-full min-h-[50vh] flex-col items-center justify-center rounded-xl border border-dashed bg-muted/50 p-8 text-center"
     >
       <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-        <PenSquare className="h-8 w-8 text-primary" />
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.5"
+          className="h-8 w-8 text-primary"
+        >
+          <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+          <path d="M14 2v6h6" />
+          <path d="M10 12h4" />
+          <path d="M8 16h8" />
+        </svg>
       </div>
       <h2 className="text-2xl font-semibold tracking-tight text-foreground">
         আপনার ক্যানভাস অপেক্ষা করছে
       </h2>
       <p className="mt-2 max-w-sm text-muted-foreground">
-        আপনার প্রথম মাস্টারপিস তৈরি করুন। প্রতিটি মহান গল্প একটি একক শব্দ দিয়ে
-        শুরু হয়।
+        আপনার প্রথম নোট তৈরি করে লেখা শুরু করুন অথবা আপনার আগের নোটগুলো ইমপোর্ট করুন।
       </p>
-      <Button onClick={onNewNote} className="mt-6">
-        <Plus className="mr-2 h-4 w-4" /> লেখা শুরু করুন
-      </Button>
+      <div className="mt-6 flex flex-col gap-4 sm:flex-row">
+        <Button onClick={onNewNote} size="lg">
+          <Plus className="mr-2 h-4 w-4" /> লেখা শুরু করুন
+        </Button>
+        <Button onClick={onImportClick} size="lg" variant="outline">
+          নোট ইমপোর্ট করুন
+        </Button>
+      </div>
     </motion.div>
   );
 }
+
+    
