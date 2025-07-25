@@ -36,7 +36,7 @@ export default function RootLayout({
   return (
     <html
       lang="bn"
-      className={`${tiroBangla.variable}`}
+      className={`${tiroBangla.variable} font-tiro-bangla`}
       suppressHydrationWarning
     >
       <body className="font-sans antialiased">

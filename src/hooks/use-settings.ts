@@ -31,38 +31,32 @@ const useSettingsStore = create<SettingsState>()(
   ),
 );
 
+// This custom hook handles hydration-safe settings.
 export const useSettings = () => {
+  // On the server, and during the initial client render, we use default settings.
   const [settings, setSettings] = useState(defaultSettings);
-  const storeSettings = useSettingsStore((state) => state);
+  const setSetting = useSettingsStore((state) => state.setSetting);
 
   useEffect(() => {
-    // This effect runs on the client after hydration
-    // It updates the state with the values from localStorage (via the store)
-    setSettings(storeSettings);
-  }, [storeSettings]);
+    // After the component mounts on the client, we subscribe to the store.
+    // This ensures that we get the settings from localStorage only on the client.
+    const unsubscribe = useSettingsStore.subscribe((state) => {
+      setSettings({
+        theme: state.theme,
+        font: state.font,
+      });
+    });
 
-  // On the server, and during the initial client render before hydration,
-  // `settings` will be `defaultSettings`.
-  // After hydration, `settings` will be updated to the stored values.
-  return { settings: settings, setSetting: storeSettings.setSetting };
+    // Set the initial state from the store once on mount.
+    const initialState = useSettingsStore.getState();
+    setSettings({
+      theme: initialState.theme,
+      font: initialState.font,
+    });
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
+  }, []);
+
+  return { settings, setSetting };
 };
-
-// Apply theme class to HTML element
-if (typeof window !== "undefined") {
-  const applyTheme = (state: SettingsState) => {
-    const html = document.documentElement;
-    const currentClasses = Array.from(html.classList);
-    const themeClasses = currentClasses.filter(
-      (c) => c.startsWith("theme-") || c.startsWith("font-"),
-    );
-    html.classList.remove(...themeClasses);
-    html.classList.add(state.theme);
-    html.classList.add(state.font);
-  };
-
-  // Initial load
-  applyTheme(useSettingsStore.getState());
-
-  // Subscribe to changes
-  useSettingsStore.subscribe(applyTheme);
-}
