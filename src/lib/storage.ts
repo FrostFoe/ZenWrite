@@ -9,7 +9,7 @@ export const createNote = async (): Promise<string> => {
   const id = `note_${Date.now()}`;
   const newNote: Note = {
     id,
-    title: "শিরোনামহীন নোট", // Default title to prevent empty block creation
+    title: "শিরোনামহীন নোট", // Default title
     content: {
       time: Date.now(),
       blocks: [], // Start with no blocks
