@@ -27,9 +27,16 @@ const themes = [
   { value: "theme-vanilla-fog", label: "Vanilla Fog" },
   { value: "theme-silk-noir", label: "Silk Noir" },
   { value: "theme-ocean-mist", label: "Ocean Mist" },
+  { value: "theme-minty-fresh", label: "Minty Fresh" },
+  { value: "theme-midnight-dusk", label: "Midnight Dusk" },
+  { value: "theme-sakura-dream", label: "Sakura Dream" },
 ];
 
-const fonts = [{ value: "font-tiro-bangla", label: "Tiro Bangla" }];
+const fonts = [
+  { value: "font-tiro-bangla", label: "Tiro Bangla" },
+  { value: "font-hind-siliguri", label: "Hind Siliguri" },
+  { value: "font-baloo-da-2", label: "Baloo Da 2" },
+];
 
 export default function SettingsPage() {
   const { settings, setSetting } = useSettings();
