@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Note } from "@/lib/types";
@@ -6,7 +7,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { useSettings } from "@/hooks/use-settings";
 import { cn } from "@/lib/utils";
-import { useEffect, useState } from "react";
+import { memo } from "react";
 
 interface NotesListProps {
   notes: Note[];
@@ -27,15 +28,9 @@ const itemVariants = {
   visible: { opacity: 1, x: 0 },
 };
 
-export function NotesList({ notes }: NotesListProps) {
+function NotesListComponent({ notes }: NotesListProps) {
   const { settings } = useSettings();
-  const [fontClass, setFontClass] = useState("");
-
-  useEffect(() => {
-    if (settings) {
-      setFontClass(settings.font.split(" ")[0]);
-    }
-  }, [settings]);
+  const fontClass = settings.font.split(" ")[0];
 
   return (
     <motion.div
@@ -70,3 +65,5 @@ export function NotesList({ notes }: NotesListProps) {
     </motion.div>
   );
 }
+
+export const NotesList = memo(NotesListComponent);

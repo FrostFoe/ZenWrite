@@ -1,6 +1,8 @@
+
 import { Note } from "@/lib/types";
 import { NoteCard } from "./note-card";
 import { motion, AnimatePresence } from "framer-motion";
+import { memo } from 'react';
 
 interface NotesGridProps {
   notes: Note[];
@@ -16,7 +18,7 @@ const containerVariants = {
   },
 };
 
-export function NotesGrid({ notes }: NotesGridProps) {
+function NotesGridComponent({ notes }: NotesGridProps) {
   return (
     <motion.div
       variants={containerVariants}
@@ -32,3 +34,5 @@ export function NotesGrid({ notes }: NotesGridProps) {
     </motion.div>
   );
 }
+
+export const NotesGrid = memo(NotesGridComponent);

@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useRef, useEffect, useState, useCallback, memo } from "react";
+import React, { useRef, useEffect, useCallback, memo } from "react";
 import EditorJS, { type OutputData } from "@editorjs/editorjs";
 import { EDITOR_TOOLS } from "@/lib/editorjs/tools";
 import { cn } from "@/lib/utils";
@@ -31,15 +31,20 @@ const EditorWrapper = ({
   setSaveStatus,
 }: EditorWrapperProps) => {
   const ejInstance = useRef<EditorJS | null>(null);
-  const isDirty = useRef(false); // To track if there are unsaved changes
+  const isDirty = useRef(false);
 
   const saveContent = useCallback(async () => {
     if (ejInstance.current && isDirty.current) {
       setSaveStatus("saving");
-      const content = await ejInstance.current.saver.save();
-      await onSave(content);
-      isDirty.current = false;
-      setSaveStatus("saved");
+      try {
+        const content = await ejInstance.current.saver.save();
+        await onSave(content);
+        isDirty.current = false;
+        setSaveStatus("saved");
+      } catch (error) {
+        console.error("Failed to save content", error);
+        setSaveStatus("unsaved");
+      }
     }
   }, [onSave, setSaveStatus]);
 
@@ -69,13 +74,11 @@ const EditorWrapper = ({
     });
   }, [initialData, setCharCount, setSaveStatus]);
 
-  // Initialize editor
   useEffect(() => {
     if (!ejInstance.current) {
       initEditor();
     }
     return () => {
-      // Save on component unmount (e.g., navigating away)
       saveContent();
 
       if (ejInstance.current?.destroy) {
@@ -85,17 +88,14 @@ const EditorWrapper = ({
     };
   }, [initEditor, saveContent]);
   
-  // Autosave interval (every 30 seconds)
   useEffect(() => {
     const interval = setInterval(() => {
       saveContent();
-    }, 30000); // 30 seconds
+    }, 30000); 
 
     return () => clearInterval(interval);
   }, [saveContent]);
 
-
-  // Zen mode escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && isZenMode) {

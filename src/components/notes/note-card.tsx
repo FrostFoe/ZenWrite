@@ -1,6 +1,7 @@
+
 "use client";
 
-import * as React from "react";
+import React, { memo } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
@@ -44,16 +45,15 @@ import { useSettings } from "@/hooks/use-settings";
 import { useNotes } from "@/hooks/use-notes";
 import { MoreVertical, Edit, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { updateNote } from "@/lib/storage";
 
 interface NoteCardProps {
   note: Note;
 }
 
-export function NoteCard({ note }: NoteCardProps) {
+function NoteCardComponent({ note }: NoteCardProps) {
   const [formattedDate, setFormattedDate] = React.useState("");
   const { settings } = useSettings();
-  const { trashNote, updateNote: updateNoteInState } = useNotes();
+  const { trashNote, updateNote } = useNotes();
   const fontClass = settings.font.split(" ")[0];
 
   const [isRenameOpen, setIsRenameOpen] = React.useState(false);
@@ -99,7 +99,6 @@ export function NoteCard({ note }: NoteCardProps) {
 
     const updates = { title: newTitle, content: newContent };
     await updateNote(note.id, updates);
-    updateNoteInState(note.id, updates); // Update state instantly
     setIsRenameOpen(false);
     toast.success("নোট রিনেম করা হয়েছে।");
   };
@@ -213,3 +212,5 @@ export function NoteCard({ note }: NoteCardProps) {
     </motion.div>
   );
 }
+
+export const NoteCard = memo(NoteCardComponent);

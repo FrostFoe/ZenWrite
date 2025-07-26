@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import type { Note } from "@/lib/types";
 import type { OutputData } from "@editorjs/editorjs";
 import { toast } from "sonner";
@@ -48,32 +48,31 @@ export default function EditorPage({ note }: { note: Note }) {
     }
   }, [settings]);
 
-  const handleSave = async (data: OutputData) => {
+  const handleSave = useCallback(async (data: OutputData) => {
     try {
       const title = getNoteTitle(data) || "শিরোনামহীন নোট";
       const totalChars = data.blocks
         .map((block) => block.data.text || "")
         .join(" ")
         .replace(/&nbsp;|<[^>]+>/g, "").length;
-      setCharCount(totalChars);
+      
       await updateNote(note.id, {
         title,
         content: data,
         charCount: totalChars,
       });
+      setCharCount(totalChars);
     } catch (error) {
       toast.error("নোট সংরক্ষণ করতে ব্যর্থ হয়েছে।");
     }
-  };
+  }, [note.id]);
 
   const handleManualSave = async () => {
+    // This function is now mostly for providing user feedback,
+    // as saving is handled automatically by the EditorWrapper component.
     setSaveStatus("saving");
-    // This is tricky as we don't have direct access to the latest data
-    // from Editor.js instance here. A better approach would be to trigger a save
-    // inside the editor component and await it.
-    // For now, we just show a toast and rely on the debounced save.
     toast.success("নোট সফলভাবে সংরক্ষণ করা হয়েছে!");
-    // The debounced save will eventually set it to "saved"
+    // The autosave will eventually set it to "saved"
     setTimeout(() => setSaveStatus("saved"), 1000);
   };
 

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { create } from "zustand";
@@ -15,6 +16,7 @@ interface NotesState {
   notes: Note[];
   trashedNotes: Note[];
   isLoading: boolean;
+  hasFetched: boolean; // To prevent multiple fetches
   fetchNotes: () => Promise<void>;
   fetchTrashedNotes: () => Promise<void>;
   addImportedNotes: (importedNotes: Note[]) => void;
@@ -27,12 +29,14 @@ interface NotesState {
 export const useNotes = create<NotesState>((set, get) => ({
   notes: [],
   trashedNotes: [],
-  isLoading: true,
+  isLoading: false,
+  hasFetched: false,
   fetchNotes: async () => {
+    if (get().hasFetched) return; // Don't fetch if already fetched
     set({ isLoading: true });
     try {
       const notes = await getNotesFromDB();
-      set({ notes, isLoading: false });
+      set({ notes, isLoading: false, hasFetched: true });
     } catch (error) {
       console.error("Failed to fetch notes:", error);
       set({ isLoading: false });
@@ -49,8 +53,10 @@ export const useNotes = create<NotesState>((set, get) => ({
     }
   },
   addImportedNotes: (importedNotes: Note[]) => {
+    const existingIds = new Set(get().notes.map(n => n.id));
+    const newNotes = importedNotes.filter(n => !existingIds.has(n.id));
     set((state) => ({
-      notes: [...importedNotes, ...state.notes],
+      notes: [...newNotes, ...state.notes],
     }));
   },
   trashNote: async (id: string) => {
@@ -79,12 +85,13 @@ export const useNotes = create<NotesState>((set, get) => ({
         note.id === id ? { ...note, ...updates, updatedAt: Date.now() } : note,
       ),
     }));
-    // The database update is now optimistic
+    
     try {
+      // The DB update is now essentially debounced by the editor's save logic
       await updateNoteInDB(id, updates);
     } catch (error) {
       console.error("Failed to update note in DB:", error);
-      // Optionally revert state here if needed
+      // Optional: Revert state here if DB update fails
     }
   },
   restoreNote: async (id: string) => {
@@ -107,6 +114,7 @@ export const useNotes = create<NotesState>((set, get) => ({
     }
   },
   deleteNotePermanently: async (id: string) => {
+    const originalTrashed = [...get().trashedNotes];
     set((state) => ({
       trashedNotes: state.trashedNotes.filter((note) => note.id !== id),
     }));
@@ -114,14 +122,12 @@ export const useNotes = create<NotesState>((set, get) => ({
       await deleteNotePermanentlyInDB(id);
     } catch (error) {
       console.error("Failed to permanently delete note:", error);
-      // Optionally revert state here
+      set({ trashedNotes: originalTrashed });
     }
   },
 }));
 
-// Initial fetch on client side
+// Initial fetch on client side, if not already fetched.
 if (typeof window !== "undefined") {
   useNotes.getState().fetchNotes();
 }
-
-    
