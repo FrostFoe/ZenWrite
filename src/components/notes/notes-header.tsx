@@ -55,14 +55,15 @@ export default function NotesHeader({
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pl-9"
+          aria-label="Search notes"
         />
       </div>
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:justify-between">
         <Select
           value={sortOption}
           onValueChange={(value) => setSortOption(value as SortOption)}
         >
-          <SelectTrigger className="w-auto flex-1 md:w-[180px] md:flex-none">
+          <SelectTrigger className="w-full sm:w-auto sm:flex-1 md:w-[180px] md:flex-none">
             <SelectValue placeholder="সাজান..." />
           </SelectTrigger>
           <SelectContent>
@@ -78,12 +79,13 @@ export default function NotesHeader({
           </SelectContent>
         </Select>
 
-        <div className="flex items-center gap-1 rounded-md border bg-background p-1">
+        <div className="flex items-center gap-1 self-end rounded-md border bg-background p-1">
           <Button
             variant={viewMode === "grid" ? "secondary" : "ghost"}
             size="icon"
             onClick={() => setViewMode("grid")}
             className="h-8 w-8"
+            aria-label="Grid view"
           >
             <LayoutGrid className="h-4 w-4" />
           </Button>
@@ -92,6 +94,7 @@ export default function NotesHeader({
             size="icon"
             onClick={() => setViewMode("list")}
             className="h-8 w-8"
+            aria-label="List view"
           >
             <List className="h-4 w-4" />
           </Button>

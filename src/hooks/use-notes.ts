@@ -4,6 +4,7 @@
 import { create } from "zustand";
 import * as localDB from "@/lib/storage";
 import type { Note } from "@/lib/types";
+import { toast } from "sonner";
 
 interface NotesState {
   notes: Note[];
@@ -25,33 +26,33 @@ interface NotesState {
 const useNotesStore = create<NotesState>((set, get) => ({
   notes: [],
   trashedNotes: [],
-  isLoading: false,
+  isLoading: true, // Start with loading true
   hasFetched: false,
 
   resetState: () =>
     set({ notes: [], trashedNotes: [], hasFetched: false, isLoading: false }),
 
   fetchNotes: async () => {
-    if (get().isLoading) return;
     set({ isLoading: true });
     try {
       const notes = await localDB.getNotes();
       set({ notes, hasFetched: true });
     } catch (error) {
       console.error("Failed to fetch notes:", error);
+      toast.error("নোট লোড করতে সমস্যা হয়েছে।");
     } finally {
       set({ isLoading: false });
     }
   },
 
   fetchTrashedNotes: async () => {
-    if (get().isLoading) return;
     set({ isLoading: true });
     try {
       const trashedNotes = await localDB.getTrashedNotes();
       set({ trashedNotes });
     } catch (error) {
       console.error("Failed to fetch trashed notes:", error);
+       toast.error("ট্র্যাশের নোট লোড করতে সমস্যা হয়েছে।");
     } finally {
       set({ isLoading: false });
     }
@@ -66,6 +67,7 @@ const useNotesStore = create<NotesState>((set, get) => ({
       return newNote.id;
     } catch (error) {
       console.error("Failed to create note:", error);
+      toast.error("নতুন নোট তৈরি করতে সমস্যা হয়েছে।");
       return undefined;
     }
   },
@@ -94,6 +96,7 @@ const useNotesStore = create<NotesState>((set, get) => ({
       await localDB.trashNote(id);
     } catch (error) {
       console.error("Failed to trash note:", error);
+      toast.error("নোটটি ট্র্যাশে সরাতে সমস্যা হয়েছে।");
       get().fetchNotes();
       get().fetchTrashedNotes();
     }
@@ -117,6 +120,7 @@ const useNotesStore = create<NotesState>((set, get) => ({
         await localDB.updateNote(id, updates);
       } catch (error) {
         console.error("Failed to update note in DB:", error);
+        toast.error("নোটটি আপডেট করতে সমস্যা হয়েছে।");
         get().fetchNotes();
       }
     }
@@ -130,7 +134,7 @@ const useNotesStore = create<NotesState>((set, get) => ({
     const pinnedNotesCount = get().notes.filter((n) => n.isPinned).length;
 
     if (isPinned && pinnedNotesCount >= 3) {
-      console.warn("Pin limit reached");
+      toast.error("আপনি সর্বোচ্চ ৩টি নোট পিন করতে পারবেন।");
       return;
     }
 
@@ -150,6 +154,7 @@ const useNotesStore = create<NotesState>((set, get) => ({
       await localDB.restoreNote(id);
     } catch (error) {
       console.error("Failed to restore note:", error);
+      toast.error("নোটটি পুনরুদ্ধার করতে সমস্যা হয়েছে।");
       get().fetchNotes();
       get().fetchTrashedNotes();
     }
@@ -165,6 +170,7 @@ const useNotesStore = create<NotesState>((set, get) => ({
       await localDB.deleteNotePermanently(id);
     } catch (error) {
       console.error("Failed to permanently delete note:", error);
+      toast.error("নোটটি স্থায়ীভাবে মুছতে সমস্যা হয়েছে।");
       set({ trashedNotes: originalTrashed });
     }
   },

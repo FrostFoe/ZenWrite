@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { memo } from "react";
 import { getTextFromEditorJS } from "@/lib/utils";
 import { Badge } from "../ui/badge";
+import { Pin } from "lucide-react";
 
 interface NotesListProps {
   notes: Note[];
@@ -54,9 +55,14 @@ function NotesListComponent({ notes }: NotesListProps) {
             )}
           >
             <div className="mb-2 flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
-              <h3 className="line-clamp-1 flex-1 font-semibold text-foreground">
-                {note.title || "শিরোনামহীন নোট"}
-              </h3>
+               <div className="flex items-center gap-2">
+                {note.isPinned && (
+                  <Pin className="h-4 w-4 flex-shrink-0 text-primary" />
+                )}
+                 <h3 className="line-clamp-1 flex-1 font-semibold text-foreground">
+                  {note.title || "শিরোনামহীন নোট"}
+                 </h3>
+              </div>
               <p className="flex-shrink-0 text-xs text-muted-foreground">
                 {format(new Date(note.updatedAt), "PP", { locale: bn })}
               </p>

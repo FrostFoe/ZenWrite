@@ -17,6 +17,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "../ui/input";
 import { useDebounce } from "@/hooks/use-debounce";
 import { Badge } from "../ui/badge";
+import { toast } from "sonner";
 
 type SaveStatus = "unsaved" | "saving" | "saved";
 
@@ -54,9 +55,13 @@ export default function EditorHeader({
     if ((e.key === "Enter" || e.key === ",") && tagInput.trim()) {
       e.preventDefault();
       const newTag = tagInput.trim().toLowerCase();
-      if (!tags.includes(newTag)) {
-        setTags([...tags, newTag]);
+      if (!newTag) return;
+
+      if (tags.includes(newTag)) {
+        toast.error(`ট্যাগ "${newTag}" ইতিমধ্যে যোগ করা হয়েছে।`);
+        return;
       }
+      setTags([...tags, newTag]);
       setTagInput("");
     }
   };
@@ -173,6 +178,7 @@ export default function EditorHeader({
                   <button
                     onClick={() => handleRemoveTag(tag)}
                     className="rounded-full hover:bg-muted-foreground/20"
+                    aria-label={`Remove tag ${tag}`}
                   >
                     <X className="h-3 w-3" />
                   </button>

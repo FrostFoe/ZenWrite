@@ -1,14 +1,22 @@
 
 import type { NextConfig } from "next";
-import withPWA from "next-pwa";
+import withPWAInit from "next-pwa";
 
-const pwaConfig = withPWA({
+const isDev = process.env.NODE_ENV === "development";
+
+const withPWA = withPWAInit({
   dest: "public",
+  disable: isDev,
   register: true,
   skipWaiting: true,
-  disable: process.env.NODE_ENV === "development",
+  cacheOnFrontEndNav: true,
+  aggressiveFrontEndNavCaching: true,
+  reloadOnOnline: true,
   fallbacks: {
     document: "/offline",
+  },
+  workboxOptions: {
+    disableDevLogs: true,
   },
 });
 
@@ -30,9 +38,8 @@ const nextConfig: NextConfig = {
     ],
   },
   experimental: {
-    // This is recommended for performance improvements in newer Next.js versions
     optimizePackageImports: ["@radix-ui/react-icons", "lucide-react"],
   },
 };
 
-export default pwaConfig(nextConfig);
+export default withPWA(nextConfig);

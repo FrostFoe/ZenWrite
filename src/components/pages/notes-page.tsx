@@ -49,8 +49,6 @@ export default function NotesPage({
       if (noteId) {
         toast.success("নতুন নোট তৈরি হয়েছে!");
         router.push(`/editor/${noteId}`);
-      } else {
-        toast.error("নোট তৈরি করতে ব্যর্থ হয়েছে।");
       }
     } catch (error) {
       toast.error("নোট তৈরি করতে ব্যর্থ হয়েছে।");
@@ -225,6 +223,7 @@ function EmptyState({
           strokeLinejoin="round"
           strokeWidth="1.5"
           className="h-8 w-8 text-primary"
+          aria-hidden="true"
         >
           <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
           <path d="M14 2v6h6" />
