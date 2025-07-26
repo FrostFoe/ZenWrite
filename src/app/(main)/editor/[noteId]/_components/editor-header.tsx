@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Save, Maximize, Loader2, History } from "lucide-react";
+import { ArrowLeft, Save, Maximize, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -92,14 +92,6 @@ export default function EditorHeader({
                 aria-label="Save Note"
               >
                 <Save className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => router.push(`/editor/${noteId}/history`)}
-                aria-label="View History"
-              >
-                <History className="h-4 w-4" />
               </Button>
               <Button
                 variant="outline"

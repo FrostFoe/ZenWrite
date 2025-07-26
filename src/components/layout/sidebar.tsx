@@ -2,13 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Settings, Trash2, BarChart } from "lucide-react";
+import { Home, Settings, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/stores/use-settings";
 
 const navItems = [
   { href: "/notes", label: "নোট সমূহ", icon: Home },
-  { href: "/dashboard", label: "ড্যাশবোর্ড", icon: BarChart },
   { href: "/trash", label: "ট্র্যাশ", icon: Trash2 },
   { href: "/settings", label: "সেটিংস", icon: Settings },
 ];

@@ -1,20 +1,11 @@
 "use client";
 
 import { useMemo } from "react";
-import { BarChart, Book, Tag, Type } from "lucide-react";
+import { Book, Tag, Type } from "lucide-react";
 import { motion } from "framer-motion";
-import {
-  Bar,
-  BarChart as RechartsBarChart,
-  ResponsiveContainer,
-  XAxis,
-  YAxis,
-  Tooltip,
-} from "recharts";
 
 import { useNotes } from "@/stores/use-notes";
 import { useSettingsStore } from "@/stores/use-settings";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import Loading from "@/app/loading";
 import StatCard from "./_components/stat-card";
@@ -42,16 +33,10 @@ export default function DashboardPage() {
       });
     });
 
-    const topTags = Object.entries(tagCounts)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 5)
-      .map(([name, value]) => ({ name, total: value }));
-
     return {
       totalNotes,
       totalWords,
       totalTags: Object.keys(tagCounts).length,
-      topTags,
     };
   }, [notes]);
 
@@ -94,53 +79,6 @@ export default function DashboardPage() {
         />
         <StatCard title="ব্যবহৃত ট্যাগ" value={stats.totalTags} icon={Tag} />
       </motion.div>
-
-      {stats.topTags.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle>সর্বাধিক ব্যবহৃত ট্যাগ</CardTitle>
-            </CardHeader>
-            <CardContent className="pr-0">
-              <ResponsiveContainer width="100%" height={350}>
-                <RechartsBarChart data={stats.topTags}>
-                  <XAxis
-                    dataKey="name"
-                    stroke="hsl(var(--muted-foreground))"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <YAxis
-                    stroke="hsl(var(--muted-foreground))"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                    tickFormatter={(value) => `${value}`}
-                  />
-                  <Tooltip
-                    cursor={{ fill: "hsl(var(--accent))" }}
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--background))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "var(--radius)",
-                    }}
-                  />
-                  <Bar
-                    dataKey="total"
-                    fill="hsl(var(--primary))"
-                    radius={[4, 4, 0, 0]}
-                  />
-                </RechartsBarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
     </div>
   );
 }

@@ -1,4 +1,3 @@
-
 import type { OutputData } from "@editorjs/editorjs";
 
 export interface NoteHistory {
@@ -14,16 +13,7 @@ export interface Note {
   updatedAt: number;
   charCount?: number;
   tags?: string[];
-  collectionId?: string;
-  coverImage?: string;
   isTrashed: boolean;
   history?: NoteHistory[];
   isPinned: boolean;
-}
-
-export interface Collection {
-  id: string;
-  name: string;
-  emoji: string;
-  createdAt: number;
 }
