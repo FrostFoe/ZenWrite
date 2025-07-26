@@ -2,10 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
-import { motion } from "framer-motion";
 import { Note } from "@/lib/types";
-import { Button } from "@/components/ui/button";
 import Sidebar from "@/components/nav/sidebar";
 import { NotesGrid } from "@/components/notes/notes-grid";
 import { NotesList as NotesListView } from "@/components/notes/notes-list";
@@ -16,6 +13,10 @@ import { cn } from "@/lib/utils";
 import { createNote, importNotes } from "@/lib/storage";
 import { toast } from "sonner";
 import Loading from "@/app/loading";
+import { Button } from "../ui/button";
+import { Plus } from "lucide-react";
+import { motion } from "framer-motion";
+import { ExpandableFab } from "../ui/expandable-fab";
 
 type SortOption =
   `${"updatedAt" | "createdAt" | "title" | "charCount"}-${"asc" | "desc"}`;
@@ -98,6 +99,12 @@ export default function NotesPage({
     return <Loading />;
   }
 
+  const fabActions = [
+    { label: "নতুন নোট", action: handleNewNote, icon: "FilePlus" },
+    { label: "নোট ইমপোর্ট করুন", action: handleImportClick, icon: "Upload" },
+  ];
+
+
   return (
     <div className="flex h-full bg-background">
       <Sidebar />
@@ -128,25 +135,7 @@ export default function NotesPage({
             className="hidden"
             accept=".json"
           />
-          <motion.div
-            initial={{ scale: 0, opacity: 0, y: 100 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            transition={{
-              type: "spring",
-              stiffness: 260,
-              damping: 20,
-              delay: 0.5,
-            }}
-            className="fixed bottom-28 right-4 z-50 lg:bottom-8 lg:right-8"
-          >
-            <Button
-              onClick={handleNewNote}
-              className="h-16 w-16 rounded-full shadow-2xl"
-              aria-label="Create new note"
-            >
-              <Plus className="h-8 w-8" />
-            </Button>
-          </motion.div>
+         <ExpandableFab actions={fabActions} />
         </div>
       </div>
     </div>
