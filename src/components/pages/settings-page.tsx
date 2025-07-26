@@ -28,7 +28,7 @@ import { cn } from "@/lib/utils";
 import { useNotes } from "@/hooks/use-notes";
 import { useGoogleLogin, googleLogout } from "@react-oauth/google";
 import { Switch } from "../ui/switch";
-import { User, LogOut } from "lucide-react";
+import { User, LogOut, AlertTriangle } from "lucide-react";
 
 const themes = [
   { value: "theme-vanilla-fog", label: "Vanilla Fog" },
@@ -44,18 +44,20 @@ const fonts = [
   { value: "font-baloo-da-2", label: "Baloo Da 2" },
 ];
 
+const isGoogleAuthAvailable = !!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+
 export default function SettingsPage() {
-  const { 
-    theme, 
-    font, 
-    isDriveSyncEnabled, 
-    userProfile, 
-    setSetting, 
-    setUserProfile, 
+  const {
+    theme,
+    font,
+    isDriveSyncEnabled,
+    userProfile,
+    setSetting,
+    setUserProfile,
     clearUserProfile,
-    toggleDriveSync
+    toggleDriveSync,
   } = useSettingsStore();
-  
+
   const router = useRouter();
   const fontClass = font.split(" ")[0];
   const importInputRef = useRef<HTMLInputElement>(null);
@@ -64,9 +66,12 @@ export default function SettingsPage() {
   const login = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       try {
-        const userInfoRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
-        });
+        const userInfoRes = await fetch(
+          "https://www.googleapis.com/oauth2/v3/userinfo",
+          {
+            headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+          },
+        );
         const userInfo = await userInfoRes.json();
         setUserProfile({
           ...userInfo,
@@ -207,27 +212,46 @@ export default function SettingsPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col items-center justify-center space-y-4 h-full">
-                {userProfile ? (
+                {!isGoogleAuthAvailable ? (
+                  <div className="text-center text-muted-foreground">
+                    <AlertTriangle className="mx-auto h-8 w-8 mb-2" />
+                    <p className="font-semibold">ফিচারটি কনফিগার করা হয়নি</p>
+                    <p className="text-sm">
+                      এই ফিচারটি চালু করতে অ্যাপ অ্যাডমিনিস্ট্রেটরের সাথে যোগাযোগ করুন।
+                    </p>
+                  </div>
+                ) : userProfile ? (
                   <>
                     <Avatar>
-                      <AvatarImage src={userProfile.picture} alt={userProfile.name} />
+                      <AvatarImage
+                        src={userProfile.picture}
+                        alt={userProfile.name}
+                      />
                       <AvatarFallback>
                         <User />
                       </AvatarFallback>
                     </Avatar>
                     <div className="text-center">
                       <p className="font-semibold">{userProfile.name}</p>
-                      <p className="text-sm text-muted-foreground">{userProfile.email}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {userProfile.email}
+                      </p>
                     </div>
                     <div className="flex items-center space-x-2 w-full pt-4">
-                      <Label htmlFor="drive-sync-switch" className="flex-grow">Drive সিঙ্ক চালু করুন</Label>
+                      <Label htmlFor="drive-sync-switch" className="flex-grow">
+                        Drive সিঙ্ক চালু করুন
+                      </Label>
                       <Switch
                         id="drive-sync-switch"
                         checked={isDriveSyncEnabled}
                         onCheckedChange={(checked) => toggleDriveSync(checked)}
                       />
                     </div>
-                    <Button onClick={handleLogout} variant="outline" className="w-full">
+                    <Button
+                      onClick={handleLogout}
+                      variant="outline"
+                      className="w-full"
+                    >
                       <LogOut className="mr-2 h-4 w-4" />
                       সাইন আউট
                     </Button>
@@ -252,6 +276,7 @@ export default function SettingsPage() {
                   onClick={handleImportClick}
                   variant="outline"
                   className="w-full"
+                  disabled={isDriveSyncEnabled}
                 >
                   নোট ইমপোর্ট করুন
                 </Button>

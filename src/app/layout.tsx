@@ -41,7 +41,7 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-// IMPORTANT: Replace with your actual Google Client ID
+// IMPORTANT: Replace with your actual Google Client ID in a .env.local file
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
 
 export default function RootLayout({
@@ -49,6 +49,20 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const isGoogleAuthAvailable = !!GOOGLE_CLIENT_ID;
+
+  const appContent = (
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="system"
+        enableSystem
+        disableTransitionOnChange
+      >
+        {children}
+        <Toaster richColors />
+      </ThemeProvider>
+  );
+
   return (
     <html
       lang="bn"
@@ -56,17 +70,13 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="font-sans antialiased">
-        <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            {children}
-            <Toaster richColors />
-          </ThemeProvider>
-        </GoogleOAuthProvider>
+        {isGoogleAuthAvailable ? (
+          <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+            {appContent}
+          </GoogleOAuthProvider>
+        ) : (
+          appContent
+        )}
       </body>
     </html>
   );
