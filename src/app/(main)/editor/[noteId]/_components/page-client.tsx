@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import type { Note } from "@/lib/types";
 import type { OutputData } from "@editorjs/editorjs";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 import { getNoteTitle } from "@/lib/storage";
 import { cn } from "@/lib/utils";
 import dynamic from "next/dynamic";
