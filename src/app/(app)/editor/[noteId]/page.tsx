@@ -18,7 +18,6 @@ export default function Page() {
   useEffect(() => {
     if (!noteId) return;
 
-    // This case should not be hit with the new flow, but as a fallback, redirect.
     if (noteId === "new") {
       router.replace("/notes");
       return;
@@ -30,7 +29,6 @@ export default function Page() {
         if (fetchedNote) {
           setNote(fetchedNote);
         } else {
-          // If no note is found, redirect to the main notes page.
           router.replace("/notes");
         }
       } catch (error) {
@@ -48,7 +46,6 @@ export default function Page() {
     return <Loading />;
   }
 
-  // This can be shown briefly before router.replace() kicks in or if note fetch fails.
   if (!note) {
     return <Loading />;
   }

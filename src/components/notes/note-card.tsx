@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Note } from "@/lib/types";
 import { getTextFromEditorJS, cn } from "@/lib/utils";
 import { useSettingsStore } from "@/hooks/use-settings";
@@ -82,13 +83,15 @@ function NoteCardComponent({ note }: NoteCardProps) {
   };
 
   const handleTogglePin = () => {
-    const pinnedNotesCount = notes.filter(n => n.isPinned).length;
+    const pinnedNotesCount = notes.filter((n) => n.isPinned).length;
     if (!note.isPinned && pinnedNotesCount >= 3) {
       toast.error("আপনি সর্বোচ্চ ৩টি নোট পিন করতে পারবেন।");
       return;
     }
     togglePin(note.id);
-    toast.success(note.isPinned ? "নোটটি আনপিন করা হয়েছে।" : "নোটটি পিন করা হয়েছে।");
+    toast.success(
+      note.isPinned ? "নোটটি আনপিন করা হয়েছে।" : "নোটটি পিন করা হয়েছে।",
+    );
   };
 
   const handleRename = async (e: React.FormEvent) => {
@@ -97,29 +100,15 @@ function NoteCardComponent({ note }: NoteCardProps) {
       toast.error("শিরোনাম খালি রাখা যাবে না।");
       return;
     }
-    // Optimistically update the UI
-    const originalTitle = note.title;
-    const optimisticNote = { ...note, title: newTitle };
-    updateNote(note.id, { title: newTitle }); // This updates the store
-
+    await updateNote(note.id, { title: newTitle });
     setIsRenameOpen(false);
     toast.success("নোট রিনেম করা হয়েছে।");
-
-    try {
-      // The state is already updated, this just persists the full change
-      await useNotes.getState().updateNote(note.id, { title: newTitle });
-    } catch (error) {
-      toast.error("রিনেম করতে সমস্যা হয়েছে।");
-      // Revert if there was an error
-      updateNote(note.id, { title: originalTitle });
-    }
   };
-
 
   const cardVariants = {
     hidden: { opacity: 0, y: 20, scale: 0.95 },
     visible: { opacity: 1, y: 0, scale: 1 },
-    exit: { opacity: 0, y: -20, scale: 0.95 }
+    exit: { opacity: 0, y: -20, scale: 0.95 },
   };
 
   return (
@@ -141,13 +130,17 @@ function NoteCardComponent({ note }: NoteCardProps) {
         )}
       >
         <CardHeader className="flex flex-row items-start justify-between gap-2 pb-2">
-          <div className="flex-grow overflow-hidden flex items-center gap-2">
-             {note.isPinned && <Pin className="h-4 w-4 text-primary flex-shrink-0" />}
-             <CardTitle className="line-clamp-2 text-xl font-semibold">
-              <Link href={`/editor/${note.id}`} className="hover:underline">
-                {note.title || "শিরোনামহীন নোট"}
-              </Link>
-            </CardTitle>
+          <div className="flex-grow overflow-hidden">
+            <div className="flex items-center gap-2">
+              {note.isPinned && (
+                <Pin className="h-4 w-4 flex-shrink-0 text-primary" />
+              )}
+              <CardTitle className="line-clamp-1 text-xl font-semibold">
+                <Link href={`/editor/${note.id}`} className="hover:underline">
+                  {note.title || "শিরোনামহীন নোট"}
+                </Link>
+              </CardTitle>
+            </div>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -160,8 +153,11 @@ function NoteCardComponent({ note }: NoteCardProps) {
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-               <DropdownMenuItem onSelect={handleTogglePin}>
+            <DropdownMenuContent
+              align="end"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <DropdownMenuItem onSelect={handleTogglePin}>
                 {note.isPinned ? (
                   <>
                     <PinOff className="mr-2 h-4 w-4" />
@@ -174,7 +170,7 @@ function NoteCardComponent({ note }: NoteCardProps) {
                   </>
                 )}
               </DropdownMenuItem>
-              
+
               <Dialog open={isRenameOpen} onOpenChange={setIsRenameOpen}>
                 <DialogTrigger asChild>
                   <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
@@ -216,7 +212,8 @@ function NoteCardComponent({ note }: NoteCardProps) {
                   <AlertDialogHeader>
                     <AlertDialogTitle>আপনি কি নিশ্চিত?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      এই নোটটি ট্র্যাশে পাঠানো হবে। আপনি ট্র্যাশ থেকে এটি পুনরুদ্ধার করতে পারবেন।
+                      এই নোটটি ট্র্যাশে পাঠানো হবে। আপনি ট্র্যাশ থেকে এটি
+                      পুনরুদ্ধার করতে পারবেন।
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
@@ -233,27 +230,45 @@ function NoteCardComponent({ note }: NoteCardProps) {
             </DropdownMenuContent>
           </DropdownMenu>
         </CardHeader>
-        <Link href={`/editor/${note.id}`} className="block h-full flex-grow flex flex-col justify-between p-6 pt-0">
-          <CardContent className="p-0">
-            <p className="line-clamp-3 text-sm text-muted-foreground">
+        <Link
+          href={`/editor/${note.id}`}
+          className="block h-full flex-grow p-6 pt-0"
+        >
+          <CardContent className="space-y-4 p-0">
+            <p className="line-clamp-2 text-sm text-muted-foreground">
               {contentPreview || "কোনও অতিরিক্ত বিষয়বস্তু নেই।"}
             </p>
+            {note.tags && note.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {note.tags.slice(0, 3).map((tag) => (
+                  <Badge key={tag} variant="secondary">
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            )}
           </CardContent>
-          <CardFooter className="p-0 flex justify-end text-xs text-muted-foreground mt-4">
-            <span>{formattedDate}</span>
-          </CardFooter>
         </Link>
+        <CardFooter className="p-6 pt-0 flex justify-end text-xs text-muted-foreground">
+          <span>{formattedDate}</span>
+        </CardFooter>
       </Card>
     </motion.div>
   );
 }
 
-export const NoteCard = React.memo(NoteCardComponent, (prevProps, nextProps) => {
-  return (
-    prevProps.note.id === nextProps.note.id &&
-    prevProps.note.title === nextProps.note.title &&
-    prevProps.note.updatedAt === nextProps.note.updatedAt &&
-    prevProps.note.isPinned === nextProps.note.isPinned &&
-    JSON.stringify(prevProps.note.content) === JSON.stringify(nextProps.note.content)
-  );
-});
+export const NoteCard = React.memo(
+  NoteCardComponent,
+  (prevProps, nextProps) => {
+    return (
+      prevProps.note.id === nextProps.note.id &&
+      prevProps.note.title === nextProps.note.title &&
+      prevProps.note.updatedAt === nextProps.note.updatedAt &&
+      prevProps.note.isPinned === nextProps.note.isPinned &&
+      JSON.stringify(prevProps.note.content) ===
+        JSON.stringify(nextProps.note.content) &&
+      JSON.stringify(prevProps.note.tags) ===
+        JSON.stringify(nextProps.note.tags)
+    );
+  },
+);

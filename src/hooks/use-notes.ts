@@ -27,8 +27,9 @@ const useNotesStore = create<NotesState>((set, get) => ({
   trashedNotes: [],
   isLoading: false,
   hasFetched: false,
-  
-  resetState: () => set({ notes: [], trashedNotes: [], hasFetched: false, isLoading: false }),
+
+  resetState: () =>
+    set({ notes: [], trashedNotes: [], hasFetched: false, isLoading: false }),
 
   fetchNotes: async () => {
     if (get().isLoading) return;
@@ -70,8 +71,8 @@ const useNotesStore = create<NotesState>((set, get) => ({
   },
 
   addImportedNotes: (importedNotes: Note[]) => {
-    const existingIds = new Set(get().notes.map(n => n.id));
-    const newNotes = importedNotes.filter(n => !existingIds.has(n.id));
+    const existingIds = new Set(get().notes.map((n) => n.id));
+    const newNotes = importedNotes.filter((n) => !existingIds.has(n.id));
     set((state) => ({
       notes: [...state.notes, ...newNotes],
     }));
@@ -83,32 +84,41 @@ const useNotesStore = create<NotesState>((set, get) => ({
 
     set((state) => ({
       notes: state.notes.filter((note) => note.id !== id),
-      trashedNotes: [{ ...noteToTrash, isTrashed: true }, ...state.trashedNotes],
+      trashedNotes: [
+        { ...noteToTrash, isTrashed: true },
+        ...state.trashedNotes,
+      ],
     }));
 
     try {
       await localDB.trashNote(id);
     } catch (error) {
       console.error("Failed to trash note:", error);
-      // Revert state if DB operation fails
-      get().fetchNotes(); 
+      get().fetchNotes();
       get().fetchTrashedNotes();
     }
   },
 
   updateNote: async (id: string, updates: Partial<Note>) => {
-    set((state) => ({
-      notes: state.notes.map((note) =>
-        note.id === id ? { ...note, ...updates, updatedAt: Date.now() } : note,
-      ),
-    }));
-    
-    try {
-      await localDB.updateNote(id, updates);
-    } catch (error) {
-      console.error("Failed to update note in DB:", error);
-       // Optional: Revert state if DB operation fails
-       get().fetchNotes();
+    let noteToUpdate: Note | undefined;
+    set((state) => {
+      const newNotes = state.notes.map((note) => {
+        if (note.id === id) {
+          noteToUpdate = { ...note, ...updates, updatedAt: Date.now() };
+          return noteToUpdate;
+        }
+        return note;
+      });
+      return { notes: newNotes };
+    });
+
+    if (noteToUpdate) {
+      try {
+        await localDB.updateNote(id, updates);
+      } catch (error) {
+        console.error("Failed to update note in DB:", error);
+        get().fetchNotes();
+      }
     }
   },
 
@@ -121,7 +131,7 @@ const useNotesStore = create<NotesState>((set, get) => ({
 
     if (isPinned && pinnedNotesCount >= 3) {
       console.warn("Pin limit reached");
-      return; 
+      return;
     }
 
     await get().updateNote(id, { isPinned });
@@ -140,7 +150,6 @@ const useNotesStore = create<NotesState>((set, get) => ({
       await localDB.restoreNote(id);
     } catch (error) {
       console.error("Failed to restore note:", error);
-      // Revert state if DB operation fails
       get().fetchNotes();
       get().fetchTrashedNotes();
     }

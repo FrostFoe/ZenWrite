@@ -15,7 +15,7 @@ export interface Note {
   charCount?: number;
   tags?: string[];
   collectionId?: string;
-  coverImage?: string; // base64 or a local URL
+  coverImage?: string;
   isTrashed: boolean;
   history?: NoteHistory[];
   isPinned: boolean;

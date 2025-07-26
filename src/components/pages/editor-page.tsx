@@ -36,7 +36,9 @@ function EditorSkeleton() {
 
 export default function EditorPage({ note }: { note: Note }) {
   const [isZenMode, setIsZenMode] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<"unsaved" | "saving" | "saved">("saved");
+  const [saveStatus, setSaveStatus] = useState<"unsaved" | "saving" | "saved">(
+    "saved",
+  );
   const [charCount, setCharCount] = useState(note.charCount || 0);
   const font = useSettingsStore((state) => state.font);
   const updateNoteInStore = useNotes((state) => state.updateNote);
@@ -54,32 +56,49 @@ export default function EditorPage({ note }: { note: Note }) {
     }
   }, [font]);
 
-  const handleSave = useCallback(async (data: OutputData) => {
-    const currentNote = noteRef.current;
-    if (!currentNote) return;
-    
-    try {
-      const title = getNoteTitle(data) || "শিরোনামহীন নোট";
-      const totalChars = data.blocks
-        .map((block) => block.data.text || "")
-        .join(" ")
-        .replace(/&nbsp;|<[^>]+>/g, "").length;
-      
-      await updateNoteInStore(currentNote.id, {
-        title,
-        content: data,
-        charCount: totalChars,
-      });
+  const handleTagsChange = useCallback(
+    (tags: string[]) => {
+      const currentNote = noteRef.current;
+      if (!currentNote) return;
 
-      setCharCount(totalChars);
-    } catch (error) {
-      toast.error("নোট সংরক্ষণ করতে ব্যর্থ হয়েছে।");
-      console.error("Save error:", error);
-    }
-  }, [updateNoteInStore]);
+      // Only update if tags have actually changed
+      if (JSON.stringify(tags) !== JSON.stringify(currentNote.tags)) {
+        updateNoteInStore(currentNote.id, { tags });
+      }
+    },
+    [updateNoteInStore],
+  );
+
+  const handleSave = useCallback(
+    async (data: OutputData) => {
+      const currentNote = noteRef.current;
+      if (!currentNote) return;
+
+      try {
+        const title = getNoteTitle(data) || "শিরোনামহীন নোট";
+        const totalChars = data.blocks
+          .map((block) => block.data.text || "")
+          .join(" ")
+          .replace(/&nbsp;|<[^>]+>/g, "").length;
+
+        await updateNoteInStore(currentNote.id, {
+          title,
+          content: data,
+          charCount: totalChars,
+        });
+
+        setCharCount(totalChars);
+      } catch (error) {
+        toast.error("নোট সংরক্ষণ করতে ব্যর্থ হয়েছে।");
+        console.error("Save error:", error);
+      }
+    },
+    [updateNoteInStore],
+  );
 
   const handleManualSave = async () => {
     setSaveStatus("saving");
+    // This is a mock save for UI feedback, actual save happens on editor change
     toast.success("নোট সফলভাবে সংরক্ষণ করা হয়েছে!");
     setTimeout(() => setSaveStatus("saved"), 1000);
   };
@@ -90,10 +109,7 @@ export default function EditorPage({ note }: { note: Note }) {
       <motion.div
         layout
         transition={{ duration: 0.5, type: "spring", bounce: 0.2 }}
-        className={cn(
-          "flex-1",
-          isZenMode ? "lg:pl-0" : "lg:pl-72",
-        )}
+        className={cn("flex-1", isZenMode ? "lg:pl-0" : "lg:pl-72")}
       >
         <div
           className={cn(
@@ -108,6 +124,8 @@ export default function EditorPage({ note }: { note: Note }) {
             setIsZenMode={setIsZenMode}
             charCount={charCount}
             noteId={note.id}
+            initialTags={note.tags}
+            onTagsChange={handleTagsChange}
           />
           <EditorWrapper
             noteId={note.id}

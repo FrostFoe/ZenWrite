@@ -8,10 +8,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Button } from "../ui/button";
-import { LayoutGrid, List } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { useSettingsStore } from "@/hooks/use-settings";
 import { cn } from "@/lib/utils";
+import { Search } from "lucide-react";
 
 type SortOption =
   `${"updatedAt" | "createdAt" | "title" | "charCount"}-${"asc" | "desc"}`;
@@ -19,15 +19,15 @@ type SortOption =
 interface NotesHeaderProps {
   sortOption: SortOption;
   setSortOption: (sort: SortOption) => void;
-  viewMode: "grid" | "list";
-  setViewMode: (mode: "grid" | "list") => void;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
 }
 
 export default function NotesHeader({
   sortOption,
   setSortOption,
-  viewMode,
-  setViewMode,
+  searchQuery,
+  setSearchQuery,
 }: NotesHeaderProps) {
   const font = useSettingsStore((state) => state.font);
   const [fontClass] = font.split(" ");
@@ -42,6 +42,15 @@ export default function NotesHeader({
         আমার নোট
       </h1>
       <div className="flex items-center gap-2">
+        <div className="relative w-full max-w-sm">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="নোট খুঁজুন (ট্যাগ দিয়েও)..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
         <Select
           value={sortOption}
           onValueChange={(value) => setSortOption(value as SortOption)}
@@ -59,30 +68,6 @@ export default function NotesHeader({
             <SelectItem value="charCount-asc">দৈর্ঘ্য (সংক্ষিপ্ততম)</SelectItem>
           </SelectContent>
         </Select>
-        <div className="rounded-md bg-muted p-0.5 flex">
-          <Button
-            variant={viewMode === "grid" ? "outline" : "ghost"}
-            size="icon"
-            onClick={() => setViewMode("grid")}
-            className={cn(
-              "h-8 w-8",
-              viewMode === "grid" && "bg-background shadow-sm",
-            )}
-          >
-            <LayoutGrid className="h-4 w-4" />
-          </Button>
-          <Button
-            variant={viewMode === "list" ? "outline" : "ghost"}
-            size="icon"
-            onClick={() => setViewMode("list")}
-            className={cn(
-              "h-8 w-8",
-              viewMode === "list" && "bg-background shadow-sm",
-            )}
-          >
-            <List className="h-4 w-4" />
-          </Button>
-        </div>
       </div>
     </header>
   );

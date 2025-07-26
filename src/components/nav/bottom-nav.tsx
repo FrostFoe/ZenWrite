@@ -3,13 +3,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Settings, Trash2 } from "lucide-react";
+import { Home, Settings, Trash2, BarChart } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/hooks/use-settings";
 
 const navItems = [
   { href: "/notes", label: "নোট", icon: Home },
+  { href: "/dashboard", label: "ড্যাশবোর্ড", icon: BarChart },
   { href: "/trash", label: "ট্র্যাশ", icon: Trash2 },
   { href: "/settings", label: "সেটিংস", icon: Settings },
 ];
