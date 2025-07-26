@@ -13,7 +13,6 @@ interface EditorHeaderProps {
   isZenMode: boolean;
   setIsZenMode: (isZen: boolean) => void;
   charCount: number;
-  noteId: string;
 }
 
 export default function EditorHeader({
@@ -22,7 +21,6 @@ export default function EditorHeader({
   isZenMode,
   setIsZenMode,
   charCount,
-  noteId,
 }: EditorHeaderProps) {
   const router = useRouter();
 

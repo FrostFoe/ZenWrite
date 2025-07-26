@@ -14,7 +14,10 @@ interface NotesState {
   fetchTrashedNotes: () => Promise<void>;
   addImportedNotes: (importedNotes: Note[]) => void;
   trashNote: (id: string) => Promise<void>;
-  updateNote: (id: string, updates: Partial<Note>) => Promise<void>;
+  updateNote: (
+    id: string,
+    updates: Partial<Omit<Note, "id" | "history">>,
+  ) => Promise<void>;
   togglePin: (id: string) => Promise<void>;
   restoreNote: (id: string) => Promise<void>;
   deleteNotePermanently: (id: string) => Promise<void>;
@@ -29,9 +32,13 @@ const useNotesStore = create<NotesState>((set, get) => ({
   hasFetched: false,
 
   resetState: () =>
-    set({ notes: [], trashedNotes: [], hasFetched: false, isLoading: false }),
+    set({ notes: [], trashedNotes: [], hasFetched: false, isLoading: true }),
 
   fetchNotes: async () => {
+    if (get().hasFetched) {
+      set({ isLoading: false });
+      return;
+    }
     set({ isLoading: true });
     try {
       const notes = await localDB.getNotes();
@@ -70,10 +77,12 @@ const useNotesStore = create<NotesState>((set, get) => ({
   },
 
   addImportedNotes: (importedNotes: Note[]) => {
-    const existingIds = new Set(get().notes.map((n) => n.id));
-    const newNotes = importedNotes.filter((n) => !existingIds.has(n.id));
+    const activeNotes = importedNotes.filter((n) => !n.isTrashed);
+    const trashed = importedNotes.filter((n) => n.isTrashed);
+
     set((state) => ({
-      notes: [...state.notes, ...newNotes],
+      notes: [...state.notes, ...activeNotes],
+      trashedNotes: [...state.trashedNotes, ...trashed],
     }));
   },
 
@@ -81,12 +90,11 @@ const useNotesStore = create<NotesState>((set, get) => ({
     const noteToTrash = get().notes.find((note) => note.id === id);
     if (!noteToTrash) return;
 
+    const newNote = { ...noteToTrash, isTrashed: true, isPinned: false };
+
     set((state) => ({
       notes: state.notes.filter((note) => note.id !== id),
-      trashedNotes: [
-        { ...noteToTrash, isTrashed: true },
-        ...state.trashedNotes,
-      ],
+      trashedNotes: [newNote, ...state.trashedNotes],
     }));
 
     try {
@@ -99,7 +107,7 @@ const useNotesStore = create<NotesState>((set, get) => ({
     }
   },
 
-  updateNote: async (id: string, updates: Partial<Note>) => {
+  updateNote: async (id, updates) => {
     set((state) => ({
       notes: state.notes.map((note) =>
         note.id === id
@@ -110,8 +118,7 @@ const useNotesStore = create<NotesState>((set, get) => ({
 
     try {
       await localDB.updateNote(id, updates);
-    } catch (error)
-      {
+    } catch (error) {
       console.error("Failed to update note in DB:", error);
       toast.error("নোটটি আপডেট করতে সমস্যা হয়েছে।");
       get().fetchNotes();
@@ -121,16 +128,7 @@ const useNotesStore = create<NotesState>((set, get) => ({
   togglePin: async (id: string) => {
     const note = get().notes.find((n) => n.id === id);
     if (!note) return;
-
-    const isPinned = !note.isPinned;
-    const pinnedNotesCount = get().notes.filter((n) => n.isPinned).length;
-
-    if (isPinned && pinnedNotesCount >= 3) {
-      toast.error("আপনি সর্বোচ্চ ৩টি নোট পিন করতে পারবেন।");
-      return;
-    }
-
-    await get().updateNote(id, { isPinned });
+    await get().updateNote(id, { isPinned: !note.isPinned });
   },
 
   restoreNote: async (id: string) => {

@@ -1,18 +1,17 @@
-
 "use client";
 
 import { Note } from "./types";
-import { get, set, del, keys, setMany, getMany, clear } from "idb-keyval";
+import { get, set, del, keys, setMany } from "idb-keyval";
 import type { OutputData } from "@editorjs/editorjs";
 
 const MAX_HISTORY_LENGTH = 20;
 
-// Create a new note and return the full note object
 export const createNote = async (): Promise<Note> => {
   const id = `note_${Date.now()}`;
+  const title = "শিরোনামহীন নোট";
   const newNote: Note = {
     id,
-    title: "শিরোনামহীন নোট",
+    title: title,
     content: {
       time: Date.now(),
       blocks: [
@@ -20,7 +19,7 @@ export const createNote = async (): Promise<Note> => {
           id: `block_${Date.now()}`,
           type: "header",
           data: {
-            text: "শিরোনামহীন নোট",
+            text: title,
             level: 1,
           },
         },
@@ -32,43 +31,44 @@ export const createNote = async (): Promise<Note> => {
     charCount: 0,
     isTrashed: false,
     history: [],
+    tags: [],
     isPinned: false,
   };
   await set(id, newNote);
   return newNote;
 };
 
-// Get a single note by ID
 export const getNote = async (id: string): Promise<Note | undefined> => {
   return get(id);
 };
 
-// Get all active notes
 export const getNotes = async (): Promise<Note[]> => {
   const allKeys = (await keys()) as string[];
   const noteKeys = allKeys.filter((key) => key.startsWith("note_"));
   if (noteKeys.length === 0) return [];
-  const notes = await getMany<Note>(noteKeys);
+  const notes = (await getMany<Note>(noteKeys)).filter(
+    (note): note is Note => !!note,
+  );
   return notes
-    .filter((note): note is Note => !!note && !note.isTrashed)
+    .filter((note) => !note.isTrashed)
     .sort((a, b) => b.updatedAt - a.updatedAt);
 };
 
-// Get all trashed notes
 export const getTrashedNotes = async (): Promise<Note[]> => {
   const allKeys = (await keys()) as string[];
   const noteKeys = allKeys.filter((key) => key.startsWith("note_"));
   if (noteKeys.length === 0) return [];
-  const notes = await getMany<Note>(noteKeys);
+  const notes = (await getMany<Note>(noteKeys)).filter(
+    (note): note is Note => !!note,
+  );
   return notes
-    .filter((note): note is Note => !!note && note.isTrashed)
+    .filter((note) => note.isTrashed)
     .sort((a, b) => b.updatedAt - a.updatedAt);
 };
 
-// Update a note
 export const updateNote = async (
   id: string,
-  updates: Partial<Omit<Note, 'history' | 'id'>>,
+  updates: Partial<Omit<Note, "history" | "id">>,
 ): Promise<void> => {
   const note = await get<Note>(id);
   if (note) {
@@ -79,56 +79,47 @@ export const updateNote = async (
 
     const newHistory = [newHistoryEntry, ...(note.history || [])].slice(
       0,
-      MAX_HISTORY_LENGTH
+      MAX_HISTORY_LENGTH,
     );
 
     const updatedNote: Note = {
       ...note,
       ...updates,
       updatedAt: Date.now(),
-      history: updates.content ? newHistory : note.history, // Only add history if content changes
+      history: updates.content ? newHistory : note.history,
     };
     await set(id, updatedNote);
   }
 };
 
-// Move a note to trash
 export const trashNote = async (id: string): Promise<void> => {
-  const note = await get<Note>(id);
-   if (note) {
-    const updatedNote = { ...note, isTrashed: true, updatedAt: Date.now() };
-    await set(id, updatedNote);
-  }
+  await updateNote(id, { isTrashed: true, isPinned: false });
 };
 
-// Restore a note from trash
 export const restoreNote = async (id: string): Promise<void> => {
-   const note = await get<Note>(id);
-   if (note) {
-    const updatedNote = { ...note, isTrashed: false, updatedAt: Date.now() };
-    await set(id, updatedNote);
-  }
+  await updateNote(id, { isTrashed: false });
 };
 
-// Delete a note permanently
 export const deleteNotePermanently = async (id: string): Promise<void> => {
   await del(id);
 };
 
-// Clear all notes from IndexedDB
 export const clearAllNotes = async (): Promise<void> => {
   const allKeys = (await keys()) as string[];
   const noteKeys = allKeys.filter((key) => key.startsWith("note_"));
   await Promise.all(noteKeys.map((key) => del(key)));
 };
 
-// Export all notes to a JSON file
 export const exportNotes = async () => {
-  const allNotes = await getNotes();
-  const trashedNotes = await getTrashedNotes();
+  const allKeys = (await keys()) as string[];
+  const noteKeys = allKeys.filter((key) => key.startsWith("note_"));
+  if (noteKeys.length === 0) return [];
+  const allNotes = (await getMany<Note>(noteKeys)).filter(
+    (note): note is Note => !!note,
+  );
+
   const dataToExport = {
     notes: allNotes,
-    trashed: trashedNotes,
   };
   const jsonString = JSON.stringify(dataToExport, null, 2);
   const blob = new Blob([jsonString], { type: "application/json" });
@@ -142,14 +133,18 @@ export const exportNotes = async () => {
   URL.revokeObjectURL(href);
 };
 
-export const importNotesWithData = async (notesToImport: Note[]): Promise<void> => {
+export const importNotesWithData = async (
+  notesToImport: Note[],
+): Promise<void> => {
   if (notesToImport.length > 0) {
-    const entries: [IDBValidKey, Note][] = notesToImport.map(note => [note.id, note]);
+    const entries: [IDBValidKey, Note][] = notesToImport.map((note) => [
+      note.id,
+      note,
+    ]);
     await setMany(entries);
   }
 };
 
-// Import notes from a JSON file
 export const importNotes = (file: File): Promise<Note[]> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -157,20 +152,17 @@ export const importNotes = (file: File): Promise<Note[]> => {
       try {
         const jsonString = event.target?.result as string;
         const data = JSON.parse(jsonString);
-        
-        const notesToImport = Array.isArray(data) ? data : (data.notes || []);
-        const trashedToImport = data.trashed || [];
 
-        const allNotes = [...notesToImport, ...trashedToImport];
+        const notesToImport = Array.isArray(data) ? data : data.notes || [];
 
-        if (!Array.isArray(allNotes)) {
+        if (!Array.isArray(notesToImport)) {
           throw new Error("Invalid file format.");
         }
 
         const validatedNotes: Note[] = [];
-        for (const noteData of allNotes) {
+        for (const noteData of notesToImport) {
           if (noteData.id && noteData.content) {
-             const newNote: Note = {
+            const newNote: Note = {
               id: noteData.id,
               title: noteData.title || "শিরোনামহীন নোট",
               content: noteData.content,
@@ -179,14 +171,15 @@ export const importNotes = (file: File): Promise<Note[]> => {
               charCount: noteData.charCount || 0,
               isTrashed: noteData.isTrashed || false,
               history: noteData.history || [],
-              isPinned: noteData.isPinned || false, // Add isPinned on import
+              tags: noteData.tags || [],
+              isPinned: noteData.isPinned || false,
             };
             validatedNotes.push(newNote);
           }
         }
-        
+
         await importNotesWithData(validatedNotes);
-        
+
         resolve(validatedNotes);
       } catch (error) {
         console.error("Error parsing or importing notes:", error);
@@ -198,11 +191,9 @@ export const importNotes = (file: File): Promise<Note[]> => {
   });
 };
 
-// Utility to get title from Editor.js data
 export const getNoteTitle = (data: OutputData): string => {
   const firstBlock = data.blocks[0];
   if (firstBlock && firstBlock.type === "header") {
-    // Strip HTML tags for safety
     return firstBlock.data.text.replace(/<[^>]+>/g, "") || "শিরোনামহীন নোট";
   }
   return "শিরোনামহীন নোট";

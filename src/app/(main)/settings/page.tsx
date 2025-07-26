@@ -23,7 +23,7 @@ import { clearAllNotes, exportNotes, importNotes } from "@/lib/storage";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useNotes } from "@/stores/use-notes";
-import { UploadCloud, DownloadCloud, Trash } from "lucide-react";
+import { Upload, Download, Trash } from "lucide-react";
 import { useTheme } from "next-themes";
 import {
   AlertDialog,
@@ -161,7 +161,7 @@ export default function SettingsPage() {
               variant="outline"
               className="w-full"
             >
-              <DownloadCloud className="mr-2 h-4 w-4" />
+              <Upload className="mr-2 h-4 w-4" />
               ফাইল থেকে ইম্পোর্ট করুন
             </Button>
             <input
@@ -176,7 +176,7 @@ export default function SettingsPage() {
               variant="outline"
               className="w-full"
             >
-              <UploadCloud className="mr-2 h-4 w-4" />
+              <Download className="mr-2 h-4 w-4" />
               ফাইলে এক্সপোর্ট করুন
             </Button>
             <AlertDialog>

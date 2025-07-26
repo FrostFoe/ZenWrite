@@ -89,6 +89,10 @@ function ManageTagsDialog({
         toast.error(`ট্যাগ "${newTag}" ইতিমধ্যে যোগ করা হয়েছে।`);
         return;
       }
+      if (tags.length >= 5) {
+        toast.error("আপনি সর্বোচ্চ ৫টি ট্যাগ যোগ করতে পারবেন।");
+        return;
+      }
       setTags([...tags, newTag]);
       setTagInput("");
     }

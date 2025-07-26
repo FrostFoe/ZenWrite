@@ -19,8 +19,9 @@ export default function DashboardPage() {
   const stats = useMemo(() => {
     const totalNotes = notes.length;
     const totalWords = notes.reduce((acc, note) => {
+      if (!note.content || !note.content.blocks) return acc;
       const text =
-        note.content?.blocks
+        note.content.blocks
           .map((block) => block.data.text || "")
           .join(" ") || "";
       return acc + text.split(/\s+/).filter(Boolean).length;
