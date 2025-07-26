@@ -29,8 +29,14 @@ export default function NotesPage({
   initialNotes: Note[];
 }) {
   const router = useRouter();
-  const { notes, isLoading, fetchNotes, addImportedNotes } = useNotes();
   const { settings } = useSettings();
+  
+  // Zustand selectors for performance
+  const notes = useNotes((state) => state.notes);
+  const isLoading = useNotes((state) => state.isLoading);
+  const fetchNotes = useNotes((state) => state.fetchNotes);
+  const addImportedNotes = useNotes((state) => state.addImportedNotes);
+
   const [sortOption, setSortOption] = useState<SortOption>("updatedAt-desc");
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const fontClass = settings.font.split(" ")[0];
@@ -77,7 +83,8 @@ export default function NotesPage({
   };
 
   const sortedNotes = useMemo(() => {
-    return [...notes].sort((a, b) => {
+    const notesToSort = [...notes];
+    return notesToSort.sort((a, b) => {
       const [key, order] = sortOption.split("-");
 
       const valA = a[key as keyof Note] || 0;

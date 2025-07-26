@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect } from "react";
@@ -26,9 +27,17 @@ import { formatDistanceToNow } from "date-fns";
 import { bn } from "date-fns/locale";
 
 export default function TrashPage() {
-  const { trashedNotes, isLoading, fetchTrashedNotes, restoreNote, deleteNotePermanently } = useNotes();
   const { settings } = useSettings();
   const router = useRouter();
+
+  // Zustand selectors for performance
+  const trashedNotes = useNotes((state) => state.trashedNotes);
+  const isLoading = useNotes((state) => state.isLoading);
+  const fetchTrashedNotes = useNotes((state) => state.fetchTrashedNotes);
+  const restoreNote = useNotes((state) => state.restoreNote);
+  const deleteNotePermanently = useNotes(
+    (state) => state.deleteNotePermanently,
+  );
 
   useEffect(() => {
     fetchTrashedNotes();

@@ -45,7 +45,7 @@ export default function SettingsPage() {
   const router = useRouter();
   const fontClass = settings.font.split(" ")[0];
   const importInputRef = useRef<HTMLInputElement>(null);
-  const { addImportedNotes } = useNotes();
+  const addImportedNotes = useNotes((state) => state.addImportedNotes);
 
   const handleExport = () => {
     try {

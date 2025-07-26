@@ -53,7 +53,8 @@ interface NoteCardProps {
 function NoteCardComponent({ note }: NoteCardProps) {
   const [formattedDate, setFormattedDate] = React.useState("");
   const { settings } = useSettings();
-  const { trashNote, updateNote } = useNotes();
+  const trashNote = useNotes((state) => state.trashNote);
+  const updateNote = useNotes((state) => state.updateNote);
   const fontClass = settings.font.split(" ")[0];
 
   const [isRenameOpen, setIsRenameOpen] = React.useState(false);
@@ -219,6 +220,6 @@ export const NoteCard = React.memo(NoteCardComponent, (prevProps, nextProps) => 
     prevProps.note.id === nextProps.note.id &&
     prevProps.note.title === nextProps.note.title &&
     prevProps.note.updatedAt === nextProps.note.updatedAt &&
-    prevProps.note.content === nextProps.note.content
+    JSON.stringify(prevProps.note.content) === JSON.stringify(nextProps.note.content)
   );
 });
