@@ -119,6 +119,7 @@ function NoteCardComponent({ note }: NoteCardProps) {
       exit="exit"
       transition={{ duration: 0.3 }}
       whileHover={{ translateY: -5, scale: 1.02 }}
+      className="h-full"
     >
       <Card
         className={cn(
@@ -127,11 +128,11 @@ function NoteCardComponent({ note }: NoteCardProps) {
         )}
       >
         <CardHeader className="flex flex-row items-start justify-between gap-2">
-          <Link href={`/editor/${note.id}`} className="block w-full overflow-hidden">
-            <CardTitle className="line-clamp-2 text-xl font-semibold">
-              {note.title || "শিরোনামহীন নোট"}
-            </CardTitle>
-          </Link>
+          <div className="flex-grow overflow-hidden">
+             <CardTitle className="line-clamp-2 text-xl font-semibold">
+                {note.title || "শিরোনামহীন নোট"}
+              </CardTitle>
+          </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -199,8 +200,8 @@ function NoteCardComponent({ note }: NoteCardProps) {
             </DropdownMenuContent>
           </DropdownMenu>
         </CardHeader>
-        <Link href={`/editor/${note.id}`} className="block h-full">
-          <CardContent className="flex-grow">
+        <Link href={`/editor/${note.id}`} className="block h-full flex-grow flex flex-col justify-between">
+          <CardContent>
             <p className="line-clamp-3 text-sm text-muted-foreground">
               {contentPreview || "কোনও অতিরিক্ত বিষয়বস্তু নেই।"}
             </p>
