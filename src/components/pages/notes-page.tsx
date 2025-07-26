@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Note } from "@/lib/types";
 import Sidebar from "@/components/nav/sidebar";
 import { NotesGrid } from "@/components/notes/notes-grid";
+import { NotesList } from "@/components/notes/notes-list";
 import NotesHeader from "@/components/notes/notes-header";
 import { useSettingsStore } from "@/hooks/use-settings";
 import { useNotes } from "@/hooks/use-notes";
@@ -21,6 +22,7 @@ import { getTextFromEditorJS } from "@/lib/utils";
 
 type SortOption =
   `${"updatedAt" | "createdAt" | "title" | "charCount"}-${"asc" | "desc"}`;
+type ViewMode = "grid" | "list";
 
 export default function NotesPage({
   initialNotes,
@@ -36,6 +38,7 @@ export default function NotesPage({
   const [sortOption, setSortOption] = useState<SortOption>("updatedAt-desc");
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
+  const [viewMode, setViewMode] = useState<ViewMode>("grid");
 
   const fontClass = font.split(" ")[0];
   const importInputRef = useRef<HTMLInputElement>(null);
@@ -147,9 +150,15 @@ export default function NotesPage({
             setSortOption={setSortOption}
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
+            viewMode={viewMode}
+            setViewMode={setViewMode}
           />
           {sortedNotes.length > 0 ? (
-            <NotesGrid notes={sortedNotes} />
+             viewMode === "grid" ? (
+              <NotesGrid notes={sortedNotes} />
+            ) : (
+              <NotesList notes={sortedNotes} />
+            )
           ) : (
             <EmptyState
               onNewNote={handleNewNote}
