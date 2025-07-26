@@ -28,19 +28,19 @@
 
   .theme-vanilla-fog {
     --background: 220 20% 98%;
-    --foreground: 220 15% 5%; /* Darker Text */
+    --foreground: 0 0% 0%; /* Pure Black */
     --card: 220 20% 100%;
-    --card-foreground: 220 15% 10%;
+    --card-foreground: 0 0% 0%; /* Pure Black */
     --popover: 220 20% 100%;
-    --popover-foreground: 220 15% 10%;
+    --popover-foreground: 0 0% 0%; /* Pure Black */
     --primary: 38 92% 50%;
     --primary-foreground: 38 92% 98%;
     --secondary: 220 14.3% 95.9%;
-    --secondary-foreground: 220 9% 20%;
+    --secondary-foreground: 0 0% 0%; /* Pure Black */
     --muted: 220 14.3% 95.9%;
     --muted-foreground: 220 9% 45%;
     --accent: 220 14.3% 93.9%;
-    --accent-foreground: 220 9% 15%;
+    --accent-foreground: 0 0% 0%; /* Pure Black */
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
     --border: 220 13% 90%;
@@ -72,17 +72,17 @@
 
   .theme-ocean-mist {
     --background: 204 45% 96%;
-    --foreground: 215 35% 10%; /* Darker Text */
+    --foreground: 0 0% 0%; /* Pure Black */
     --card: 204 45% 99%;
-    --card-foreground: 215 35% 15%;
+    --card-foreground: 0 0% 0%; /* Pure Black */
     --primary: 195 85% 40%;
     --primary-foreground: 204 100% 98%;
     --secondary: 204 25% 92%;
-    --secondary-foreground: 215 30% 25%;
+    --secondary-foreground: 0 0% 0%; /* Pure Black */
     --muted: 204 25% 92%;
     --muted-foreground: 215 20% 55%;
     --accent: 204 25% 88%;
-    --accent-foreground: 215 30% 20%;
+    --accent-foreground: 0 0% 0%; /* Pure Black */
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
     --border: 204 25% 86%;
@@ -92,17 +92,17 @@
 
   .theme-minty-fresh {
     --background: 140 30% 97%;
-    --foreground: 140 20% 5%; /* Darker Text */
+    --foreground: 0 0% 0%; /* Pure Black */
     --card: 140 30% 100%;
-    --card-foreground: 140 20% 10%;
+    --card-foreground: 0 0% 0%; /* Pure Black */
     --primary: 150 70% 40%;
     --primary-foreground: 150 70% 98%;
     --secondary: 140 20% 94%;
-    --secondary-foreground: 140 20% 20%;
+    --secondary-foreground: 0 0% 0%; /* Pure Black */
     --muted: 140 20% 94%;
     --muted-foreground: 140 15% 45%;
     --accent: 140 20% 90%;
-    --accent-foreground: 140 20% 15%;
+    --accent-foreground: 0 0% 0%; /* Pure Black */
     --destructive: 0 80% 60%;
     --destructive-foreground: 0 0% 100%;
     --border: 140 20% 88%;
