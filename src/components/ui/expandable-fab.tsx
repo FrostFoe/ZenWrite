@@ -3,11 +3,10 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, X, FilePlus, Upload } from 'lucide-react';
+import { Plus, FilePlus, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-// You can expand this with more icons as needed
 const icons: { [key: string]: React.ElementType } = {
   FilePlus,
   Upload,
@@ -15,7 +14,7 @@ const icons: { [key: string]: React.ElementType } = {
 
 interface FabAction {
   label: string;
-  icon: string; // Key for the icons object
+  icon: string;
   action: () => void;
 }
 
@@ -30,13 +29,13 @@ export function ExpandableFab({ actions }: ExpandableFabProps) {
     open: {
       transition: {
         staggerChildren: 0.1,
-        staggerDirection: -1, // Items appear from bottom to top
+        staggerDirection: -1,
       },
     },
     closed: {
       transition: {
         staggerChildren: 0.05,
-        staggerDirection: 1, // Items disappear from top to bottom
+        staggerDirection: 1,
       },
     },
   };
@@ -64,7 +63,7 @@ export function ExpandableFab({ actions }: ExpandableFabProps) {
   }
 
   return (
-    <div className="fixed bottom-24 right-6 lg:bottom-8 lg:right-8 z-50">
+    <div className="fixed bottom-6 right-6 lg:bottom-8 lg:right-8 z-50 flex flex-col items-end">
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -83,7 +82,7 @@ export function ExpandableFab({ actions }: ExpandableFabProps) {
                   className="flex items-center space-x-3"
                   whileHover={{ scale: 1.05 }}
                 >
-                  <span className="bg-background text-foreground text-sm font-medium py-1 px-3 rounded-md shadow-sm">
+                  <span className="bg-card text-card-foreground text-sm font-medium py-1 px-3 rounded-md shadow-sm border">
                     {action.label}
                   </span>
                   <Button

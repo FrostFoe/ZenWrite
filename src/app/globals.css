@@ -48,7 +48,6 @@
     --ring: 262.1 83.3% 57.8%;
   }
 
-  /* Specific override for editor content on light themes */
   .prose {
     --tw-prose-body: hsl(var(--foreground));
     --tw-prose-headings: hsl(var(--foreground));
@@ -66,6 +65,9 @@
     --tw-prose-pre-bg: hsl(var(--card));
     --tw-prose-th-borders: hsl(var(--border));
     --tw-prose-td-borders: hsl(var(--border));
+  }
+  
+  .dark .prose {
     --tw-prose-invert-body: hsl(var(--foreground));
     --tw-prose-invert-headings: hsl(var(--foreground));
     --tw-prose-invert-lead: hsl(var(--foreground));

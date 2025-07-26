@@ -12,7 +12,7 @@ import EditorHeader from "@/components/editor/editor-header";
 import { Skeleton } from "../ui/skeleton";
 import Sidebar from "../nav/sidebar";
 import { useSettingsStore } from "@/hooks/use-settings";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useNotes } from "@/hooks/use-notes";
 
 const EditorWrapper = dynamic(
@@ -87,9 +87,11 @@ export default function EditorPage({ note }: { note: Note }) {
   return (
     <div className="flex h-full bg-background">
       <AnimatePresence>{!isZenMode && <Sidebar />}</AnimatePresence>
-      <div
+      <motion.div
+        layout
+        transition={{ duration: 0.5, type: "spring", bounce: 0.2 }}
         className={cn(
-          "flex-1 transition-all duration-300",
+          "flex-1",
           isZenMode ? "lg:pl-0" : "lg:pl-72",
         )}
       >
@@ -117,7 +119,7 @@ export default function EditorPage({ note }: { note: Note }) {
             setSaveStatus={setSaveStatus}
           />
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

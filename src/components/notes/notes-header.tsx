@@ -9,8 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "../ui/button";
-import { LayoutGrid, List, Plus } from "lucide-react";
-import Link from "next/link";
+import { LayoutGrid, List } from "lucide-react";
 import { useSettingsStore } from "@/hooks/use-settings";
 import { cn } from "@/lib/utils";
 
@@ -84,11 +83,6 @@ export default function NotesHeader({
             <List className="h-4 w-4" />
           </Button>
         </div>
-        <Button asChild className="hidden">
-          <Link href="/editor/new">
-            <Plus className="mr-2 h-4 w-4" /> নতুন নোট
-          </Link>
-        </Button>
       </div>
     </header>
   );

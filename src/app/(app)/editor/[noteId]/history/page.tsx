@@ -13,6 +13,7 @@ import NoteHistoryTimeline from "@/components/ui/note-history-timeline";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/hooks/use-settings";
+import { motion } from "framer-motion";
 
 export default function NoteHistoryPage() {
   const params = useParams();
@@ -111,7 +112,12 @@ export default function NoteHistoryPage() {
 
 function EmptyHistoryState() {
   return (
-    <div className="flex min-h-[50vh] flex-col items-center justify-center rounded-xl border border-dashed bg-muted/50 p-8 text-center">
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5, type: "spring" }}
+      className="flex min-h-[50vh] flex-col items-center justify-center rounded-xl border border-dashed bg-muted/50 p-8 text-center"
+    >
       <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
         <History className="h-8 w-8 text-primary" />
       </div>
@@ -121,6 +127,6 @@ function EmptyHistoryState() {
       <p className="mt-2 max-w-sm text-muted-foreground">
         এই নোটটির কোনও সংরক্ষিত সংস্করণ এখনো তৈরি হয়নি।
       </p>
-    </div>
+    </motion.div>
   );
 }

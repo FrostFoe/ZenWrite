@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Note } from "@/lib/types";
 import Sidebar from "@/components/nav/sidebar";
@@ -12,7 +12,6 @@ import { useNotes } from "@/hooks/use-notes";
 import { cn } from "@/lib/utils";
 import { importNotes } from "@/lib/storage";
 import { toast } from "sonner";
-import Loading from "@/app/loading";
 import { Button } from "../ui/button";
 import { Plus } from "lucide-react";
 import { motion } from "framer-motion";
@@ -39,7 +38,7 @@ export default function NotesPage({
   const fontClass = font.split(" ")[0];
   const importInputRef = useRef<HTMLInputElement>(null);
 
-  const handleNewNote = async () => {
+  const handleNewNote = useCallback(async () => {
     try {
       const noteId = await createNote();
       if (noteId) {
@@ -52,16 +51,16 @@ export default function NotesPage({
       toast.error("নোট তৈরি করতে ব্যর্থ হয়েছে।");
       console.error(error);
     }
-  };
+  }, [createNote, router]);
 
-  const handleImportClick = () => {
+  const handleImportClick = useCallback(() => {
     if (userProfile) {
       toast.info("ড্রাইভ সিঙ্ক চালু থাকলে নোট ইম্পোর্ট করলে ডেটা কনফ্লিক্ট হতে পারে।");
     }
     importInputRef.current?.click();
-  };
+  }, [userProfile]);
 
-  const handleFileImport = async (
+  const handleFileImport = useCallback(async (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = event.target.files?.[0];
@@ -79,7 +78,7 @@ export default function NotesPage({
         }
       }
     }
-  };
+  }, [addImportedNotes]);
 
   const sortedNotes = useMemo(() => {
     const notesToSort = [...initialNotes];
@@ -98,7 +97,7 @@ export default function NotesPage({
       if (key === 'createdAt' || key === 'updatedAt') {
          const dateA = new Date(valA).getTime();
          const dateB = new Date(valB).getTime();
-         return order === 'asc' ? dateA - dateB : dateB - a;
+         return order === 'asc' ? dateA - dateB : dateB - dateA;
       }
 
       const numA = typeof valA === "number" ? valA : 0;

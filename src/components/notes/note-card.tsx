@@ -123,15 +123,17 @@ function NoteCardComponent({ note }: NoteCardProps) {
     >
       <Card
         className={cn(
-          "flex h-full flex-col border-2 border-transparent transition-all duration-300 ease-in-out hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/10",
+          "flex h-full flex-col border-2 border-transparent transition-all duration-300 ease-in-out hover:border-primary/50 hover:shadow-lg",
           fontClass,
         )}
       >
-        <CardHeader className="flex flex-row items-start justify-between gap-2">
+        <CardHeader className="flex flex-row items-start justify-between gap-2 pb-2">
           <div className="flex-grow overflow-hidden">
              <CardTitle className="line-clamp-2 text-xl font-semibold">
+              <Link href={`/editor/${note.id}`} className="hover:underline">
                 {note.title || "শিরোনামহীন নোট"}
-              </CardTitle>
+              </Link>
+            </CardTitle>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -139,11 +141,12 @@ function NoteCardComponent({ note }: NoteCardProps) {
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 flex-shrink-0"
+                onClick={(e) => e.stopPropagation()}
               >
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
               <Dialog open={isRenameOpen} onOpenChange={setIsRenameOpen}>
                 <DialogTrigger asChild>
                   <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
@@ -200,13 +203,13 @@ function NoteCardComponent({ note }: NoteCardProps) {
             </DropdownMenuContent>
           </DropdownMenu>
         </CardHeader>
-        <Link href={`/editor/${note.id}`} className="block h-full flex-grow flex flex-col justify-between">
-          <CardContent>
+        <Link href={`/editor/${note.id}`} className="block h-full flex-grow flex flex-col justify-between p-6 pt-0">
+          <CardContent className="p-0">
             <p className="line-clamp-3 text-sm text-muted-foreground">
               {contentPreview || "কোনও অতিরিক্ত বিষয়বস্তু নেই।"}
             </p>
           </CardContent>
-          <CardFooter className="flex justify-end text-xs text-muted-foreground">
+          <CardFooter className="p-0 flex justify-end text-xs text-muted-foreground mt-4">
             <span>{formattedDate}</span>
           </CardFooter>
         </Link>
@@ -216,7 +219,6 @@ function NoteCardComponent({ note }: NoteCardProps) {
 }
 
 export const NoteCard = React.memo(NoteCardComponent, (prevProps, nextProps) => {
-  // This custom comparison function prevents re-rendering if the note's core data hasn't changed.
   return (
     prevProps.note.id === nextProps.note.id &&
     prevProps.note.title === nextProps.note.title &&
