@@ -27,16 +27,8 @@ import Sidebar from "../nav/sidebar";
 import { cn } from "@/lib/utils";
 import { useNotes } from "@/hooks/use-notes";
 import { useGoogleLogin, googleLogout } from "@react-oauth/google";
-import { Switch } from "../ui/switch";
 import { User, LogOut, AlertTriangle, UploadCloud, DownloadCloud } from "lucide-react";
-
-const themes = [
-  { value: "theme-vanilla-fog", label: "Vanilla Fog" },
-  { value: "theme-silk-noir", label: "Silk Noir" },
-  { value: "theme-ocean-mist", label: "Ocean Mist" },
-  { value: "theme-minty-fresh", label: "Minty Fresh" },
-  { value: "theme-midnight-dusk", label: "Midnight Dusk" },
-];
+import { useTheme } from "next-themes";
 
 const fonts = [
   { value: "font-tiro-bangla", label: "Tiro Bangla" },
@@ -48,15 +40,13 @@ const isGoogleAuthAvailable = !!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
 export default function SettingsPage() {
   const {
-    theme,
     font,
-    isDriveSyncEnabled,
     userProfile,
     setSetting,
     setUserProfile,
     clearUserProfile,
-    toggleDriveSync,
   } = useSettingsStore();
+  const { setTheme } = useTheme();
 
   const router = useRouter();
   const fontClass = font.split(" ")[0];
@@ -188,25 +178,20 @@ export default function SettingsPage() {
               <CardHeader>
                 <CardTitle>সাধারণ</CardTitle>
                 <CardDescription>
-                  আপনার ওয়ার্কস্পেসের লুক এবং অনুভূতি পরিবর্তন করুন।
+                  অ্যাপের চেহারা এবং ফন্ট পরিবর্তন করুন।
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="theme-select">থিম</Label>
-                  <Select
-                    value={theme}
-                    onValueChange={(value) => setSetting("theme", value)}
-                  >
+                   <Select onValueChange={setTheme}>
                     <SelectTrigger id="theme-select">
                       <SelectValue placeholder="একটি থিম নির্বাচন করুন" />
                     </SelectTrigger>
                     <SelectContent>
-                      {themes.map((theme) => (
-                        <SelectItem key={theme.value} value={theme.value}>
-                          {theme.label}
-                        </SelectItem>
-                      ))}
+                        <SelectItem value="light">লাইট</SelectItem>
+                        <SelectItem value="dark">ডার্ক</SelectItem>
+                        <SelectItem value="system">সিস্টেম</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -314,7 +299,7 @@ export default function SettingsPage() {
                   variant="outline"
                   className="w-full"
                 >
-                  নোট ইমপোর্ট করুন (.json)
+                  নোট ইম্পোর্ট করুন (.json)
                 </Button>
                 <input
                   type="file"

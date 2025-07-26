@@ -7,23 +7,9 @@ import { type ThemeProviderProps } from "next-themes/dist/types";
 import { useSettingsStore } from "@/hooks/use-settings";
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
-  const { theme, font } = useSettingsStore();
+  const { font } = useSettingsStore();
 
   React.useEffect(() => {
-    // Clean up all possible theme classes
-    document.body.classList.remove(
-      "theme-vanilla-fog",
-      "theme-silk-noir",
-      "theme-ocean-mist",
-      "theme-minty-fresh",
-      "theme-midnight-dusk",
-      "theme-sakura-dream"
-    );
-    // Add the currently selected theme class
-    if (theme) {
-      document.body.classList.add(theme);
-    }
-    
     // Clean up all possible font classes from the html element
     document.documentElement.classList.remove(
         "font-tiro-bangla",
@@ -35,11 +21,11 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
       document.documentElement.classList.add(font);
     }
 
-  }, [theme, font]);
+  }, [font]);
 
   return (
     <NextThemesProvider {...props}>
-      <div className={`${theme} ${font}`}>{children}</div>
+      {children}
     </NextThemesProvider>
   );
 }
