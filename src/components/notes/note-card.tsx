@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { memo } from "react";
+import React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
@@ -213,4 +213,12 @@ function NoteCardComponent({ note }: NoteCardProps) {
   );
 }
 
-export const NoteCard = memo(NoteCardComponent);
+export const NoteCard = React.memo(NoteCardComponent, (prevProps, nextProps) => {
+  // This custom comparison function prevents re-rendering if the note's core data hasn't changed.
+  return (
+    prevProps.note.id === nextProps.note.id &&
+    prevProps.note.title === nextProps.note.title &&
+    prevProps.note.updatedAt === nextProps.note.updatedAt &&
+    prevProps.note.content === nextProps.note.content
+  );
+});
