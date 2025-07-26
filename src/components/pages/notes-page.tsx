@@ -103,10 +103,7 @@ export default function NotesPage({
   }, [initialNotes, debouncedSearchQuery]);
 
   const sortedNotes = useMemo(() => {
-    const pinnedNotes = filteredNotes.filter((n) => n.isPinned);
-    const unpinnedNotes = filteredNotes.filter((n) => !n.isPinned);
-
-    unpinnedNotes.sort((a, b) => {
+    const sorted = [...filteredNotes].sort((a, b) => {
       const [key, order] = sortOption.split("-");
 
       const valA = a[key as keyof Note] || 0;
@@ -129,8 +126,14 @@ export default function NotesPage({
 
       return order === "asc" ? numA - numB : numB - numA;
     });
+    
+    // Ensure pinned notes are always at the top
+    return sorted.sort((a, b) => {
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
+      return 0;
+    });
 
-    return [...pinnedNotes, ...unpinnedNotes];
   }, [filteredNotes, sortOption]);
 
   const fabActions = [
