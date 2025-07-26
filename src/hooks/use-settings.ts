@@ -8,7 +8,6 @@ import { useState, useEffect } from "react";
 interface Settings {
   theme: string;
   font: string;
-  showSakura: boolean;
 }
 
 interface SettingsState extends Settings {
@@ -18,7 +17,6 @@ interface SettingsState extends Settings {
 const defaultSettings: Settings = {
   theme: "theme-vanilla-fog",
   font: "font-hind-siliguri",
-  showSakura: false,
 };
 
 const useSettingsStore = create<SettingsState>()(
@@ -47,7 +45,6 @@ export const useSettings = () => {
       setSettings({
         theme: state.theme,
         font: state.font,
-        showSakura: state.showSakura,
       });
     });
 
@@ -56,7 +53,6 @@ export const useSettings = () => {
     setSettings({
       theme: initialState.theme,
       font: initialState.font,
-      showSakura: initialState.showSakura,
     });
 
     // Cleanup subscription on unmount

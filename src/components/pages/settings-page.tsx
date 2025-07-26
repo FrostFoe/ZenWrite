@@ -18,7 +18,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { clearAllNotes, exportNotes, importNotes } from "@/lib/storage";
@@ -33,7 +32,6 @@ const themes = [
   { value: "theme-ocean-mist", label: "Ocean Mist" },
   { value: "theme-minty-fresh", label: "Minty Fresh" },
   { value: "theme-midnight-dusk", label: "Midnight Dusk" },
-  { value: "theme-sakura-dream", label: "Sakura Dream" },
 ];
 
 const fonts = [
@@ -154,18 +152,6 @@ export default function SettingsPage() {
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
-                <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
-                  <div className="space-y-0.5">
-                    <Label>সাকুরা মোড</Label>
-                    <CardDescription>
-                       একটি শান্ত সাকুরা এফেক্ট চালু করুন।
-                    </CardDescription>
-                  </div>
-                  <Switch
-                    checked={settings.showSakura}
-                    onCheckedChange={(value) => setSetting("showSakura", value)}
-                  />
                 </div>
               </CardContent>
             </Card>
