@@ -98,7 +98,7 @@ export default function NotesPage({
       if (key === 'createdAt' || key === 'updatedAt') {
          const dateA = new Date(valA).getTime();
          const dateB = new Date(valB).getTime();
-         return order === 'asc' ? dateA - dateB : dateB - dateA;
+         return order === 'asc' ? dateA - dateB : dateB - a;
       }
 
       const numA = typeof valA === "number" ? valA : 0;
@@ -181,7 +181,7 @@ function EmptyState({
         আপনার ক্যানভাস অপেক্ষা করছে
       </h2>
       <p className="mt-2 max-w-sm text-muted-foreground">
-        আপনার প্রথম নোট তৈরি করে লেখা শুরু করুন অথবা আপনার আগের নোটগুলো ইমপোর্ট করুন।
+        আপনার প্রথম নোট তৈরি করে লেখা শুরু করুন অথবা আপনার আগের নোটগুলো ইম্পোর্ট করুন।
       </p>
       <div className="mt-6 flex flex-col gap-4 sm:flex-row">
         <Button onClick={onNewNote} size="lg">
