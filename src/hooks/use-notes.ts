@@ -15,6 +15,7 @@ interface NotesState {
   addImportedNotes: (importedNotes: Note[]) => void;
   trashNote: (id: string) => Promise<void>;
   updateNote: (id: string, updates: Partial<Note>) => Promise<void>;
+  togglePin: (id: string) => Promise<void>;
   restoreNote: (id: string) => Promise<void>;
   deleteNotePermanently: (id: string) => Promise<void>;
   createNote: () => Promise<string | undefined>;
@@ -109,6 +110,21 @@ const useNotesStore = create<NotesState>((set, get) => ({
        // Optional: Revert state if DB operation fails
        get().fetchNotes();
     }
+  },
+
+  togglePin: async (id: string) => {
+    const note = get().notes.find((n) => n.id === id);
+    if (!note) return;
+
+    const isPinned = !note.isPinned;
+    const pinnedNotesCount = get().notes.filter((n) => n.isPinned).length;
+
+    if (isPinned && pinnedNotesCount >= 3) {
+      console.warn("Pin limit reached");
+      return; 
+    }
+
+    await get().updateNote(id, { isPinned });
   },
 
   restoreNote: async (id: string) => {

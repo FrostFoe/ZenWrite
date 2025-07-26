@@ -32,6 +32,7 @@ export const createNote = async (): Promise<Note> => {
     charCount: 0,
     isTrashed: false,
     history: [],
+    isPinned: false,
   };
   await set(id, newNote);
   return newNote;
@@ -85,7 +86,7 @@ export const updateNote = async (
       ...note,
       ...updates,
       updatedAt: Date.now(),
-      history: newHistory,
+      history: updates.content ? newHistory : note.history, // Only add history if content changes
     };
     await set(id, updatedNote);
   }
@@ -178,6 +179,7 @@ export const importNotes = (file: File): Promise<Note[]> => {
               charCount: noteData.charCount || 0,
               isTrashed: noteData.isTrashed || false,
               history: noteData.history || [],
+              isPinned: noteData.isPinned || false, // Add isPinned on import
             };
             validatedNotes.push(newNote);
           }

@@ -77,8 +77,10 @@ export default function NotesPage({
   }, [addImportedNotes]);
 
   const sortedNotes = useMemo(() => {
-    const notesToSort = [...initialNotes];
-    return notesToSort.sort((a, b) => {
+    const pinnedNotes = initialNotes.filter(n => n.isPinned);
+    const unpinnedNotes = initialNotes.filter(n => !n.isPinned);
+
+    unpinnedNotes.sort((a, b) => {
       const [key, order] = sortOption.split("-");
 
       const valA = a[key as keyof Note] || 0;
@@ -101,6 +103,8 @@ export default function NotesPage({
 
       return order === "asc" ? numA - numB : numB - numA;
     });
+
+    return [...pinnedNotes, ...unpinnedNotes];
   }, [initialNotes, sortOption]);
 
   const fabActions = [

@@ -17,6 +17,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -43,7 +44,7 @@ import { Note } from "@/lib/types";
 import { getTextFromEditorJS, cn } from "@/lib/utils";
 import { useSettingsStore } from "@/hooks/use-settings";
 import { useNotes } from "@/hooks/use-notes";
-import { MoreVertical, Edit, Trash2 } from "lucide-react";
+import { MoreVertical, Edit, Trash2, Pin, PinOff } from "lucide-react";
 import { toast } from "sonner";
 
 interface NoteCardProps {
@@ -53,8 +54,7 @@ interface NoteCardProps {
 function NoteCardComponent({ note }: NoteCardProps) {
   const [formattedDate, setFormattedDate] = React.useState("");
   const font = useSettingsStore((state) => state.font);
-  const trashNote = useNotes((state) => state.trashNote);
-  const updateNote = useNotes((state) => state.updateNote);
+  const { trashNote, updateNote, togglePin, notes } = useNotes();
   const fontClass = font.split(" ")[0];
 
   const [isRenameOpen, setIsRenameOpen] = React.useState(false);
@@ -81,28 +81,40 @@ function NoteCardComponent({ note }: NoteCardProps) {
     toast.success("নোটটি ট্র্যাশে পাঠানো হয়েছে।");
   };
 
+  const handleTogglePin = () => {
+    const pinnedNotesCount = notes.filter(n => n.isPinned).length;
+    if (!note.isPinned && pinnedNotesCount >= 3) {
+      toast.error("আপনি সর্বোচ্চ ৩টি নোট পিন করতে পারবেন।");
+      return;
+    }
+    togglePin(note.id);
+    toast.success(note.isPinned ? "নোটটি আনপিন করা হয়েছে।" : "নোটটি পিন করা হয়েছে।");
+  };
+
   const handleRename = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim()) {
       toast.error("শিরোনাম খালি রাখা যাবে না।");
       return;
     }
-    const newContent = { ...note.content };
-    if (newContent.blocks.length > 0 && newContent.blocks[0]?.type === "header") {
-      newContent.blocks[0].data.text = newTitle;
-    } else {
-      newContent.blocks.unshift({
-        id: `block_${Date.now()}`,
-        type: "header",
-        data: { text: newTitle, level: 1 },
-      });
-    }
+    // Optimistically update the UI
+    const originalTitle = note.title;
+    const optimisticNote = { ...note, title: newTitle };
+    updateNote(note.id, { title: newTitle }); // This updates the store
 
-    const updates = { title: newTitle, content: newContent };
-    await updateNote(note.id, updates);
     setIsRenameOpen(false);
     toast.success("নোট রিনেম করা হয়েছে।");
+
+    try {
+      // The state is already updated, this just persists the full change
+      await useNotes.getState().updateNote(note.id, { title: newTitle });
+    } catch (error) {
+      toast.error("রিনেম করতে সমস্যা হয়েছে।");
+      // Revert if there was an error
+      updateNote(note.id, { title: originalTitle });
+    }
   };
+
 
   const cardVariants = {
     hidden: { opacity: 0, y: 20, scale: 0.95 },
@@ -123,12 +135,14 @@ function NoteCardComponent({ note }: NoteCardProps) {
     >
       <Card
         className={cn(
-          "flex h-full flex-col border-2 border-transparent transition-all duration-300 ease-in-out hover:border-primary/50 hover:shadow-lg",
+          "flex h-full flex-col border-2 transition-all duration-300 ease-in-out hover:shadow-lg",
+          note.isPinned ? "border-primary/50" : "border-transparent",
           fontClass,
         )}
       >
         <CardHeader className="flex flex-row items-start justify-between gap-2 pb-2">
-          <div className="flex-grow overflow-hidden">
+          <div className="flex-grow overflow-hidden flex items-center gap-2">
+             {note.isPinned && <Pin className="h-4 w-4 text-primary flex-shrink-0" />}
              <CardTitle className="line-clamp-2 text-xl font-semibold">
               <Link href={`/editor/${note.id}`} className="hover:underline">
                 {note.title || "শিরোনামহীন নোট"}
@@ -147,6 +161,20 @@ function NoteCardComponent({ note }: NoteCardProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+               <DropdownMenuItem onSelect={handleTogglePin}>
+                {note.isPinned ? (
+                  <>
+                    <PinOff className="mr-2 h-4 w-4" />
+                    <span>আনপিন করুন</span>
+                  </>
+                ) : (
+                  <>
+                    <Pin className="mr-2 h-4 w-4" />
+                    <span>পিন করুন</span>
+                  </>
+                )}
+              </DropdownMenuItem>
+              
               <Dialog open={isRenameOpen} onOpenChange={setIsRenameOpen}>
                 <DialogTrigger asChild>
                   <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
@@ -171,6 +199,8 @@ function NoteCardComponent({ note }: NoteCardProps) {
                   </form>
                 </DialogContent>
               </Dialog>
+
+              <DropdownMenuSeparator />
 
               <AlertDialog>
                 <AlertDialogTrigger asChild>
@@ -223,6 +253,7 @@ export const NoteCard = React.memo(NoteCardComponent, (prevProps, nextProps) => 
     prevProps.note.id === nextProps.note.id &&
     prevProps.note.title === nextProps.note.title &&
     prevProps.note.updatedAt === nextProps.note.updatedAt &&
+    prevProps.note.isPinned === nextProps.note.isPinned &&
     JSON.stringify(prevProps.note.content) === JSON.stringify(nextProps.note.content)
   );
 });

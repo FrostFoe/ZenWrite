@@ -18,6 +18,7 @@ export interface Note {
   coverImage?: string; // base64 or a local URL
   isTrashed: boolean;
   history?: NoteHistory[];
+  isPinned: boolean;
 }
 
 export interface Collection {
