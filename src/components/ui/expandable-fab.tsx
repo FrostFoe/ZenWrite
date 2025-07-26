@@ -64,7 +64,7 @@ export function ExpandableFab({ actions }: ExpandableFabProps) {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 lg:bottom-8 lg:right-8 z-50">
+    <div className="fixed bottom-24 right-6 lg:bottom-8 lg:right-8 z-50">
       <AnimatePresence>
         {isOpen && (
           <motion.div
