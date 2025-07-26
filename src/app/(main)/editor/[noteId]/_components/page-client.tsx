@@ -10,7 +10,6 @@ import dynamic from "next/dynamic";
 import EditorHeader from "./editor-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSettingsStore } from "@/stores/use-settings";
-import { AnimatePresence, motion } from "framer-motion";
 import { useNotes } from "@/stores/use-notes";
 
 const EditorWrapper = dynamic(
@@ -53,18 +52,6 @@ export default function EditorPageClient({ note }: { note: Note }) {
       setFontClass(font.split(" ")[0]);
     }
   }, [font]);
-
-  const handleTagsChange = useCallback(
-    (tags: string[]) => {
-      const currentNote = noteRef.current;
-      if (!currentNote) return;
-
-      if (JSON.stringify(tags) !== JSON.stringify(currentNote.tags)) {
-        updateNoteInStore(currentNote.id, { tags });
-      }
-    },
-    [updateNoteInStore],
-  );
 
   const handleSave = useCallback(
     async (data: OutputData) => {
@@ -118,8 +105,6 @@ export default function EditorPageClient({ note }: { note: Note }) {
           setIsZenMode={setIsZenMode}
           charCount={charCount}
           noteId={note.id}
-          initialTags={note.tags}
-          onTagsChange={handleTagsChange}
         />
         <EditorWrapper
           noteId={note.id}

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { memo } from "react";
+import React, { memo, useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
@@ -36,6 +36,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -44,11 +45,120 @@ import { Note } from "@/lib/types";
 import { getTextFromEditorJS, cn } from "@/lib/utils";
 import { useSettingsStore } from "@/stores/use-settings";
 import { useNotes } from "@/stores/use-notes";
-import { MoreVertical, Edit, Trash2, Pin, PinOff } from "lucide-react";
+import {
+  MoreVertical,
+  Edit,
+  Trash2,
+  Pin,
+  PinOff,
+  Tag,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 
 interface NoteCardProps {
   note: Note;
+}
+
+function ManageTagsDialog({
+  note,
+  isOpen,
+  onOpenChange,
+}: {
+  note: Note;
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+}) {
+  const { updateNote } = useNotes();
+  const [tags, setTags] = useState<string[]>(note.tags || []);
+  const [tagInput, setTagInput] = useState("");
+
+  useEffect(() => {
+    setTags(note.tags || []);
+  }, [note.tags]);
+
+  const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if ((e.key === "Enter" || e.key === ",") && tagInput.trim()) {
+      e.preventDefault();
+      const newTag = tagInput.trim().toLowerCase();
+      if (!newTag) {
+        toast.error("ট্যাগ খালি রাখা যাবে না।");
+        return;
+      }
+      if (tags.includes(newTag)) {
+        toast.error(`ট্যাগ "${newTag}" ইতিমধ্যে যোগ করা হয়েছে।`);
+        return;
+      }
+      setTags([...tags, newTag]);
+      setTagInput("");
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    setTags(tags.filter((tag) => tag !== tagToRemove));
+  };
+
+  const handleSaveTags = async () => {
+    await updateNote(note.id, { tags });
+    toast.success("ট্যাগ সফলভাবে সেভ হয়েছে।");
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>"{note.title}" এর ট্যাগ পরিচালনা করুন</DialogTitle>
+          <DialogDescription>
+            এই নোটের জন্য ট্যাগ যোগ করুন বা সরান। Enter চেপে ট্যাগ যোগ করুন।
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="relative">
+            <Tag className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="text"
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value)}
+              onKeyDown={handleAddTag}
+              placeholder="নতুন ট্যাগ যোগ করুন..."
+              className="pl-9"
+            />
+          </div>
+          <div className="flex min-h-[48px] flex-wrap gap-2 rounded-md border p-2">
+            {tags.length > 0 ? (
+              tags.map((tag) => (
+                <Badge
+                  key={tag}
+                  variant="secondary"
+                  className="flex items-center gap-1"
+                >
+                  {tag}
+                  <button
+                    onClick={() => handleRemoveTag(tag)}
+                    className="rounded-full hover:bg-muted-foreground/20"
+                    aria-label={`Remove tag ${tag}`}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))
+            ) : (
+              <span className="text-sm text-muted-foreground">
+                কোনও ট্যাগ নেই।
+              </span>
+            )}
+          </div>
+        </div>
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            বাতিল
+          </Button>
+          <Button onClick={handleSaveTags}>সেভ করুন</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 function NoteCardComponent({ note }: NoteCardProps) {
@@ -56,11 +166,12 @@ function NoteCardComponent({ note }: NoteCardProps) {
   const { trashNote, updateNote, togglePin, notes } = useNotes();
   const fontClass = font.split(" ")[0];
 
-  const [isRenameOpen, setIsRenameOpen] = React.useState(false);
-  const [newTitle, setNewTitle] = React.useState(note.title);
-  const [formattedDate, setFormattedDate] = React.useState("");
+  const [isRenameOpen, setIsRenameOpen] = useState(false);
+  const [isTagsOpen, setIsTagsOpen] = useState(false);
+  const [newTitle, setNewTitle] = useState(note.title);
+  const [formattedDate, setFormattedDate] = useState("");
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (note.updatedAt) {
       setFormattedDate(
         formatDistanceToNow(new Date(note.updatedAt), {
@@ -111,148 +222,160 @@ function NoteCardComponent({ note }: NoteCardProps) {
   };
 
   return (
-    <motion.div
-      layout
-      variants={cardVariants}
-      initial="hidden"
-      animate="visible"
-      exit="exit"
-      transition={{ duration: 0.3 }}
-      whileHover={{ translateY: -5, scale: 1.02 }}
-      className="h-full"
-    >
-      <Card
-        className={cn(
-          "flex h-full flex-col border-2 transition-all duration-300 ease-in-out hover:shadow-lg",
-          note.isPinned ? "border-primary/50" : "border-transparent",
-          fontClass,
-        )}
+    <>
+      <motion.div
+        layout
+        variants={cardVariants}
+        initial="hidden"
+        animate="visible"
+        exit="exit"
+        transition={{ duration: 0.3 }}
+        whileHover={{ translateY: -5, scale: 1.02 }}
+        className="h-full"
       >
-        <CardHeader className="flex flex-row items-start justify-between gap-2 pb-2">
-          <div className="flex-grow overflow-hidden">
-            <div className="flex items-center gap-2">
-              {note.isPinned && (
-                <Pin className="h-4 w-4 flex-shrink-0 text-primary" />
-              )}
-              <CardTitle className="line-clamp-1 text-xl font-semibold">
-                <Link href={`/editor/${note.id}`} className="hover:underline">
-                  {note.title || "শিরোনামহীন নোট"}
-                </Link>
-              </CardTitle>
+        <Card
+          className={cn(
+            "flex h-full flex-col border-2 transition-all duration-300 ease-in-out hover:shadow-lg",
+            note.isPinned ? "border-primary/50" : "border-transparent",
+            fontClass,
+          )}
+        >
+          <CardHeader className="flex flex-row items-start justify-between gap-2 pb-2">
+            <div className="flex-grow overflow-hidden">
+              <div className="flex items-center gap-2">
+                {note.isPinned && (
+                  <Pin className="h-4 w-4 flex-shrink-0 text-primary" />
+                )}
+                <CardTitle className="line-clamp-1 text-xl font-semibold">
+                  <Link href={`/editor/${note.id}`} className="hover:underline">
+                    {note.title || "শিরোনামহীন নোট"}
+                  </Link>
+                </CardTitle>
+              </div>
             </div>
-          </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 flex-shrink-0"
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 flex-shrink-0"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
                 onClick={(e) => e.stopPropagation()}
               >
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <DropdownMenuItem onSelect={handleTogglePin}>
-                {note.isPinned ? (
-                  <>
-                    <PinOff className="mr-2 h-4 w-4" />
-                    <span>আনপিন করুন</span>
-                  </>
-                ) : (
-                  <>
-                    <Pin className="mr-2 h-4 w-4" />
-                    <span>পিন করুন</span>
-                  </>
-                )}
-              </DropdownMenuItem>
+                <DropdownMenuItem onSelect={handleTogglePin}>
+                  {note.isPinned ? (
+                    <>
+                      <PinOff className="mr-2 h-4 w-4" />
+                      <span>আনপিন করুন</span>
+                    </>
+                  ) : (
+                    <>
+                      <Pin className="mr-2 h-4 w-4" />
+                      <span>পিন করুন</span>
+                    </>
+                  )}
+                </DropdownMenuItem>
 
-              <Dialog open={isRenameOpen} onOpenChange={setIsRenameOpen}>
-                <DialogTrigger asChild>
-                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                    <Edit className="mr-2 h-4 w-4" />
-                    <span>রিনেম করুন</span>
-                  </DropdownMenuItem>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>নোট রিনেম করুন</DialogTitle>
-                  </DialogHeader>
-                  <form onSubmit={handleRename}>
-                    <div className="grid gap-4 py-4">
-                      <Input
-                        value={newTitle}
-                        onChange={(e) => setNewTitle(e.target.value)}
-                        placeholder="নতুন শিরোনাম"
-                        autoFocus
-                      />
-                    </div>
-                    <Button type="submit">সেভ করুন</Button>
-                  </form>
-                </DialogContent>
-              </Dialog>
+                <Dialog open={isRenameOpen} onOpenChange={setIsRenameOpen}>
+                  <DialogTrigger asChild>
+                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                      <Edit className="mr-2 h-4 w-4" />
+                      <span>রিনেম করুন</span>
+                    </DropdownMenuItem>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>নোট রিনেম করুন</DialogTitle>
+                    </DialogHeader>
+                    <form onSubmit={handleRename}>
+                      <div className="grid gap-4 py-4">
+                        <Input
+                          value={newTitle}
+                          onChange={(e) => setNewTitle(e.target.value)}
+                          placeholder="নতুন শিরোনাম"
+                          autoFocus
+                        />
+                      </div>
+                      <Button type="submit">সেভ করুন</Button>
+                    </form>
+                  </DialogContent>
+                </Dialog>
 
-              <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => setIsTagsOpen(true)}>
+                  <Tag className="mr-2 h-4 w-4" />
+                  <span>ট্যাগ এডিট করুন</span>
+                </DropdownMenuItem>
 
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <DropdownMenuItem
-                    className="text-destructive"
-                    onSelect={(e) => e.preventDefault()}
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    <span>ট্র্যাশে পাঠান</span>
-                  </DropdownMenuItem>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>আপনি কি নিশ্চিত?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      এই নোটটি ট্র্যাশে পাঠানো হবে। আপনি ট্র্যাশ থেকে এটি
-                      পুনরুদ্ধার করতে পারবেন।
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>বাতিল করুন</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={handleTrash}
-                      className="bg-destructive hover:bg-destructive/90"
+                <DropdownMenuSeparator />
+
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <DropdownMenuItem
+                      className="text-destructive"
+                      onSelect={(e) => e.preventDefault()}
                     >
-                      ট্র্যাশে পাঠান
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </CardHeader>
-        <Link
-          href={`/editor/${note.id}`}
-          className="block h-full flex-grow p-6 pt-0"
-        >
-          <CardContent className="space-y-4 p-0">
-            <p className="line-clamp-2 text-sm text-muted-foreground">
-              {contentPreview || "কোনও অতিরিক্ত বিষয়বস্তু নেই।"}
-            </p>
-            {note.tags && note.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {note.tags.slice(0, 3).map((tag) => (
-                  <Badge key={tag} variant="secondary">
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Link>
-        <CardFooter className="flex justify-end p-6 pt-0 text-xs text-muted-foreground">
-          <span>{formattedDate}</span>
-        </CardFooter>
-      </Card>
-    </motion.div>
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      <span>ট্র্যাশে পাঠান</span>
+                    </DropdownMenuItem>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>আপনি কি নিশ্চিত?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        এই নোটটি ট্র্যাশে পাঠানো হবে। আপনি ট্র্যাশ থেকে এটি
+                        পুনরুদ্ধার করতে পারবেন।
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>বাতিল করুন</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleTrash}
+                        className="bg-destructive hover:bg-destructive/90"
+                      >
+                        ট্র্যাশে পাঠান
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </CardHeader>
+          <Link
+            href={`/editor/${note.id}`}
+            className="block h-full flex-grow p-6 pt-0"
+          >
+            <CardContent className="space-y-4 p-0">
+              <p className="line-clamp-2 text-sm text-muted-foreground">
+                {contentPreview || "কোনও অতিরিক্ত বিষয়বস্তু নেই।"}
+              </p>
+              {note.tags && note.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {note.tags.slice(0, 3).map((tag) => (
+                    <Badge key={tag} variant="secondary">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Link>
+          <CardFooter className="flex justify-end p-6 pt-0 text-xs text-muted-foreground">
+            <span>{formattedDate}</span>
+          </CardFooter>
+        </Card>
+      </motion.div>
+      <ManageTagsDialog
+        note={note}
+        isOpen={isTagsOpen}
+        onOpenChange={setIsTagsOpen}
+      />
+    </>
   );
 }
 

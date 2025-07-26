@@ -1,22 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import {
-  ArrowLeft,
-  Save,
-  Maximize,
-  Loader2,
-  History,
-  Tag,
-  X,
-} from "lucide-react";
+import { ArrowLeft, Save, Maximize, Loader2, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { useDebounce } from "@/hooks/use-debounce";
-import { toast } from "sonner";
 
 type SaveStatus = "unsaved" | "saving" | "saved";
 
@@ -27,8 +14,6 @@ interface EditorHeaderProps {
   setIsZenMode: (isZen: boolean) => void;
   charCount: number;
   noteId: string;
-  initialTags?: string[];
-  onTagsChange: (tags: string[]) => void;
 }
 
 export default function EditorHeader({
@@ -38,38 +23,8 @@ export default function EditorHeader({
   setIsZenMode,
   charCount,
   noteId,
-  initialTags = [],
-  onTagsChange,
 }: EditorHeaderProps) {
   const router = useRouter();
-  const [tags, setTags] = useState<string[]>(initialTags);
-  const [tagInput, setTagInput] = useState("");
-  const debouncedTags = useDebounce(tags, 500);
-
-  useEffect(() => {
-    onTagsChange(debouncedTags);
-  }, [debouncedTags, onTagsChange]);
-
-  const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if ((e.key === "Enter" || e.key === ",") && tagInput.trim()) {
-      e.preventDefault();
-      const newTag = tagInput.trim().toLowerCase();
-      if (!newTag) {
-        toast.error("ট্যাগ খালি রাখা যাবে না।");
-        return;
-      }
-      if (tags.includes(newTag)) {
-        toast.error(`ট্যাগ "${newTag}" ইতিমধ্যে যোগ করা হয়েছে।`);
-        return;
-      }
-      setTags([...tags, newTag]);
-      setTagInput("");
-    }
-  };
-
-  const handleRemoveTag = (tagToRemove: string) => {
-    setTags(tags.filter((tag) => tag !== tagToRemove));
-  };
 
   const headerVariants = {
     hidden: { opacity: 0, y: -40 },
@@ -154,37 +109,6 @@ export default function EditorHeader({
               >
                 <Maximize className="h-4 w-4" />
               </Button>
-            </div>
-          </div>
-          <div className="flex flex-col gap-2">
-            <div className="relative">
-              <Tag className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                type="text"
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={handleAddTag}
-                placeholder="ট্যাগ যোগ করুন (Enter চেপে)..."
-                className="pl-9"
-              />
-            </div>
-            <div className="flex min-h-[24px] flex-wrap gap-2">
-              {tags.map((tag) => (
-                <Badge
-                  key={tag}
-                  variant="secondary"
-                  className="flex items-center gap-1"
-                >
-                  {tag}
-                  <button
-                    onClick={() => handleRemoveTag(tag)}
-                    className="rounded-full hover:bg-muted-foreground/20"
-                    aria-label={`Remove tag ${tag}`}
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              ))}
             </div>
           </div>
         </motion.header>
