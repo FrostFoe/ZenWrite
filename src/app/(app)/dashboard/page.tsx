@@ -146,18 +146,18 @@ export default function DashboardPage() {
                 <CardHeader>
                   <CardTitle>সর্বাধিক ব্যবহৃত ট্যাগ</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pr-0">
                   <ResponsiveContainer width="100%" height={350}>
                     <RechartsBarChart data={stats.topTags}>
                       <XAxis
                         dataKey="name"
-                        stroke="#888888"
+                        stroke="hsl(var(--muted-foreground))"
                         fontSize={12}
                         tickLine={false}
                         axisLine={false}
                       />
                       <YAxis
-                        stroke="#888888"
+                        stroke="hsl(var(--muted-foreground))"
                         fontSize={12}
                         tickLine={false}
                         axisLine={false}

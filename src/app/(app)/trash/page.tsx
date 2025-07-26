@@ -77,10 +77,13 @@ export default function TrashPage() {
       <Sidebar />
       <div className={cn("flex-1 lg:pl-72", font.split(" ")[0])}>
         <div className="h-full space-y-8 p-4 sm:p-6 lg:p-8">
-          <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <header>
             <h1 className={cn("text-3xl font-bold tracking-tight text-foreground sm:text-4xl", font.split(" ")[0])}>
               ট্র্যাশ
             </h1>
+             <p className="mt-2 text-muted-foreground">
+                ডিলিট করা নোটগুলো এখানে ৩০ দিন পর্যন্ত থাকবে।
+             </p>
           </header>
 
           {trashedNotes.length > 0 ? (
@@ -96,9 +99,9 @@ export default function TrashPage() {
                     key={note.id}
                     layout
                     variants={itemVariants}
-                    className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-accent"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between rounded-lg border p-4 transition-colors hover:bg-accent"
                   >
-                    <div className="flex-1">
+                    <div className="flex-1 mb-4 sm:mb-0">
                       <h3 className="font-semibold text-foreground">
                         {note.title || "শিরোনামহীন নোট"}
                       </h3>
@@ -106,7 +109,7 @@ export default function TrashPage() {
                         ট্র্যাশে পাঠানো হয়েছে: {formatDistanceToNow(new Date(note.updatedAt), { addSuffix: true, locale: bn })}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 self-end sm:self-center">
                       <Button
                         variant="ghost"
                         size="icon"
@@ -164,7 +167,7 @@ function EmptyTrashState() {
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5, type: "spring" }}
-      className="flex h-full min-h-[50vh] flex-col items-center justify-center rounded-xl border border-dashed bg-muted/50 p-8 text-center"
+      className="flex min-h-[50vh] flex-col items-center justify-center rounded-xl border border-dashed bg-muted/50 p-8 text-center"
     >
       <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
         <Trash2 className="h-8 w-8 text-primary" />

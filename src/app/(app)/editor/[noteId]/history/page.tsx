@@ -85,7 +85,7 @@ export default function NoteHistoryPage() {
               <Button variant="ghost" size="icon" onClick={() => router.back()}>
                 <ArrowLeft className="h-5 w-5" />
               </Button>
-              <div>
+              <div className="flex-1">
                 <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
                   নোটের ইতিহাস
                 </h1>

@@ -96,7 +96,15 @@ export default function EditorHeader({
           exit="exit"
           className="fixed top-0 left-0 right-0 z-10 flex h-auto flex-col gap-2 border-b bg-background/80 px-4 py-2 backdrop-blur-sm lg:relative lg:h-auto lg:border-none lg:bg-transparent lg:px-0 lg:py-0 lg:backdrop-blur-none"
         >
-          <div className="flex w-full items-center justify-between gap-2">
+          <div className="flex w-full flex-wrap items-center justify-between gap-2">
+            <Button
+              variant="ghost"
+              onClick={() => router.push("/notes")}
+              className="hidden lg:inline-flex"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              নোটে ফিরে যান
+            </Button>
             <Button
               variant="ghost"
               size="icon"
@@ -105,14 +113,6 @@ export default function EditorHeader({
               aria-label="Back to notes"
             >
               <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => router.push("/notes")}
-              className="hidden lg:inline-flex"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              নোটে ফিরে যান
             </Button>
             <div className="flex flex-shrink-0 items-center gap-2">
               <p className="hidden text-sm text-muted-foreground sm:block">
@@ -162,7 +162,7 @@ export default function EditorHeader({
                 className="pl-9"
               />
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex min-h-[24px] flex-wrap gap-2">
               {tags.map((tag) => (
                 <Badge
                   key={tag}
