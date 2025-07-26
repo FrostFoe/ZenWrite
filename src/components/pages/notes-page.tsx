@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Note } from "@/lib/types";
 import Sidebar from "@/components/nav/sidebar";
@@ -23,17 +23,14 @@ type SortOption =
 type ViewMode = "grid" | "list";
 
 export default function NotesPage({
-  initialNotes: _,
+  initialNotes,
 }: {
   initialNotes: Note[];
 }) {
   const router = useRouter();
-  const { font, isDriveSyncEnabled } = useSettingsStore();
+  const font = useSettingsStore((state) => state.font);
+  const userProfile = useSettingsStore((state) => state.userProfile);
   
-  // Zustand selectors for performance
-  const notes = useNotes((state) => state.notes);
-  const isLoading = useNotes((state) => state.isLoading);
-  const fetchNotes = useNotes((state) => state.fetchNotes);
   const createNote = useNotes((state) => state.createNote);
   const addImportedNotes = useNotes((state) => state.addImportedNotes);
 
@@ -41,10 +38,6 @@ export default function NotesPage({
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const fontClass = font.split(" ")[0];
   const importInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    fetchNotes();
-  }, [fetchNotes, isDriveSyncEnabled]); // Re-fetch if sync is toggled
 
   const handleNewNote = async () => {
     try {
@@ -62,9 +55,8 @@ export default function NotesPage({
   };
 
   const handleImportClick = () => {
-    if (isDriveSyncEnabled) {
-      toast.info("ড্রাইভ সিঙ্ক চালু থাকা অবস্থায় নোট ইম্পোর্ট করা যাবে না।");
-      return;
+    if (userProfile) {
+      toast.info("ড্রাইভ সিঙ্ক চালু থাকলে নোট ইম্পোর্ট করলে ডেটা কনফ্লিক্ট হতে পারে।");
     }
     importInputRef.current?.click();
   };
@@ -90,7 +82,7 @@ export default function NotesPage({
   };
 
   const sortedNotes = useMemo(() => {
-    const notesToSort = [...notes];
+    const notesToSort = [...initialNotes];
     return notesToSort.sort((a, b) => {
       const [key, order] = sortOption.split("-");
 
@@ -102,23 +94,24 @@ export default function NotesPage({
           ? String(valA).localeCompare(String(valB))
           : String(valB).localeCompare(String(valA));
       }
+      
+      if (key === 'createdAt' || key === 'updatedAt') {
+         const dateA = new Date(valA).getTime();
+         const dateB = new Date(valB).getTime();
+         return order === 'asc' ? dateA - dateB : dateB - dateA;
+      }
 
       const numA = typeof valA === "number" ? valA : 0;
       const numB = typeof valB === "number" ? valB : 0;
 
       return order === "asc" ? numA - numB : numB - numA;
     });
-  }, [notes, sortOption]);
-
-  if (isLoading) {
-    return <Loading />;
-  }
+  }, [initialNotes, sortOption]);
 
   const fabActions = [
     { label: "নতুন নোট", action: handleNewNote, icon: "FilePlus" },
-    { label: "নোট ইমপোর্ট করুন", action: handleImportClick, icon: "Upload" },
+    { label: "নোট ইম্পোর্ট করুন", action: handleImportClick, icon: "Upload" },
   ];
-
 
   return (
     <div className="flex h-full bg-background">
@@ -132,11 +125,7 @@ export default function NotesPage({
             setViewMode={setViewMode}
           />
           {sortedNotes.length > 0 ? (
-            viewMode === "grid" ? (
-              <NotesGrid notes={sortedNotes} />
-            ) : (
-              <NotesGrid notes={sortedNotes} />
-            )
+            <NotesGrid notes={sortedNotes} />
           ) : (
             <EmptyState
               onNewNote={handleNewNote}
@@ -199,7 +188,7 @@ function EmptyState({
           <Plus className="mr-2 h-4 w-4" /> লেখা শুরু করুন
         </Button>
         <Button onClick={onImportClick} size="lg" variant="outline">
-          নোট ইমপোর্ট করুন
+          নোট ইম্পোর্ট করুন
         </Button>
       </div>
     </motion.div>

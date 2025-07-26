@@ -27,8 +27,20 @@ import Sidebar from "../nav/sidebar";
 import { cn } from "@/lib/utils";
 import { useNotes } from "@/hooks/use-notes";
 import { useGoogleLogin, googleLogout } from "@react-oauth/google";
-import { User, LogOut, AlertTriangle, UploadCloud, DownloadCloud } from "lucide-react";
+import { User, LogOut, AlertTriangle, UploadCloud, DownloadCloud, Trash } from "lucide-react";
 import { useTheme } from "next-themes";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+
 
 const fonts = [
   { value: "font-tiro-bangla", label: "Tiro Bangla" },
@@ -90,9 +102,9 @@ export default function SettingsPage() {
     toast.info("সফলভাবে সাইন আউট হয়েছেন।");
   };
 
-  const handleExport = () => {
+  const handleExport = async () => {
     try {
-      exportNotes();
+      await exportNotes();
       toast.success("নোট সফলভাবে এক্সপোর্ট করা হয়েছে!");
     } catch (error) {
       toast.error("নোট এক্সপোর্ট করতে ব্যর্থ হয়েছে।");
@@ -147,16 +159,10 @@ export default function SettingsPage() {
     }
   }
 
-  const handleClearData = () => {
-    if (
-      window.confirm(
-        "আপনি কি নিশ্চিত যে আপনি আপনার সমস্ত নোট মুছে ফেলতে চান? এই ক্রিয়াটি বাতিল করা যাবে না।",
-      )
-    ) {
-      clearAllNotes();
-      toast.success("সমস্ত নোট মুছে ফেলা হয়েছে।");
-      router.push("/notes"); // Redirect to a clean slate
-    }
+  const handleClearData = async () => {
+    await clearAllNotes();
+    toast.success("সমস্ত নোট মুছে ফেলা হয়েছে।");
+    router.push("/notes"); // Redirect to a clean slate
   };
 
   return (
@@ -184,7 +190,7 @@ export default function SettingsPage() {
               <CardContent className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="theme-select">থিম</Label>
-                   <Select onValueChange={setTheme}>
+                   <Select onValueChange={setTheme} defaultValue="system">
                     <SelectTrigger id="theme-select">
                       <SelectValue placeholder="একটি থিম নির্বাচন করুন" />
                     </SelectTrigger>
@@ -216,14 +222,14 @@ export default function SettingsPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="flex flex-col">
               <CardHeader>
-                <CardTitle>Google Drive সিঙ্ক</CardTitle>
+                <CardTitle>Google Drive</CardTitle>
                 <CardDescription>
                   আপনার নোট ক্লাউডে ব্যাকআপ এবং সিঙ্ক করুন।
                 </CardDescription>
               </CardHeader>
-              <CardContent className="flex flex-col items-center justify-center space-y-4 h-full">
+              <CardContent className="flex flex-grow flex-col items-center justify-center space-y-4">
                 {!isGoogleAuthAvailable ? (
                   <div className="text-center text-muted-foreground">
                     <AlertTriangle className="mx-auto h-8 w-8 mb-2" />
@@ -248,6 +254,22 @@ export default function SettingsPage() {
                       <p className="text-sm text-muted-foreground">
                         {userProfile.email}
                       </p>
+                    </div>
+                     <div className="grid w-full grid-cols-2 gap-2">
+                      <Button
+                        onClick={handleSyncToDrive}
+                        variant="outline"
+                      >
+                        <UploadCloud className="mr-2 h-4 w-4" />
+                        সিঙ্ক
+                      </Button>
+                      <Button
+                        onClick={handleImportFromDrive}
+                        variant="outline"
+                      >
+                        <DownloadCloud className="mr-2 h-4 w-4" />
+                        ইম্পোর্ট
+                      </Button>
                     </div>
                     <Button
                       onClick={handleLogout}
@@ -274,32 +296,13 @@ export default function SettingsPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {userProfile && (
-                  <>
-                    <Button
-                      onClick={handleSyncToDrive}
-                      variant="outline"
-                      className="w-full"
-                    >
-                      <UploadCloud className="mr-2 h-4 w-4" />
-                      Drive-এ সিঙ্ক করুন
-                    </Button>
-                    <Button
-                      onClick={handleImportFromDrive}
-                      variant="outline"
-                      className="w-full"
-                    >
-                      <DownloadCloud className="mr-2 h-4 w-4" />
-                      Drive থেকে ইম্পোর্ট করুন
-                    </Button>
-                  </>
-                )}
                 <Button
                   onClick={handleImportClick}
                   variant="outline"
                   className="w-full"
                 >
-                  নোট ইম্পোর্ট করুন (.json)
+                  <DownloadCloud className="mr-2 h-4 w-4" />
+                  ফাইল থেকে ইম্পোর্ট করুন
                 </Button>
                 <input
                   type="file"
@@ -313,15 +316,34 @@ export default function SettingsPage() {
                   variant="outline"
                   className="w-full"
                 >
-                  সমস্ত নোট এক্সপোর্ট করুন
+                   <UploadCloud className="mr-2 h-4 w-4" />
+                  ফাইলে এক্সপোর্ট করুন
                 </Button>
-                <Button
-                  onClick={handleClearData}
-                  variant="destructive"
-                  className="w-full"
-                >
-                  সমস্ত ডেটা সাফ করুন
-                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" className="w-full">
+                       <Trash className="mr-2 h-4 w-4" />
+                       সমস্ত ডেটা সাফ করুন
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>আপনি কি নিশ্চিত?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        এই ক্রিয়াটি আপনার সমস্ত লোকাল নোট স্থায়ীভাবে মুছে ফেলবে। এটি বাতিল করা যাবে না। গুগল ড্রাইভের ডেটা প্রভাবিত হবে না।
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>বাতিল করুন</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleClearData}
+                        className="bg-destructive hover:bg-destructive/90"
+                      >
+                        ডিলিট করুন
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </CardContent>
             </Card>
           </div>

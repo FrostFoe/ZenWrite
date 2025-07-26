@@ -1,11 +1,11 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import type { Note } from "@/lib/types";
 import type { OutputData } from "@editorjs/editorjs";
 import { toast } from "sonner";
-import { updateNote, getNoteTitle } from "@/lib/storage";
+import { getNoteTitle } from "@/lib/storage";
 import { cn } from "@/lib/utils";
 import dynamic from "next/dynamic";
 import EditorHeader from "@/components/editor/editor-header";
@@ -13,6 +13,7 @@ import { Skeleton } from "../ui/skeleton";
 import Sidebar from "../nav/sidebar";
 import { useSettingsStore } from "@/hooks/use-settings";
 import { AnimatePresence } from "framer-motion";
+import { useNotes } from "@/hooks/use-notes";
 
 const EditorWrapper = dynamic(
   () => import("@/components/editor/editor-wrapper"),
@@ -35,12 +36,17 @@ function EditorSkeleton() {
 
 export default function EditorPage({ note }: { note: Note }) {
   const [isZenMode, setIsZenMode] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<"unsaved" | "saving" | "saved">(
-    "saved",
-  );
+  const [saveStatus, setSaveStatus] = useState<"unsaved" | "saving" | "saved">("saved");
   const [charCount, setCharCount] = useState(note.charCount || 0);
   const font = useSettingsStore((state) => state.font);
+  const updateNoteInStore = useNotes((state) => state.updateNote);
   const [fontClass, setFontClass] = useState("");
+  const noteRef = useRef(note);
+
+  useEffect(() => {
+    noteRef.current = note;
+    setCharCount(note.charCount || 0);
+  }, [note]);
 
   useEffect(() => {
     if (font) {
@@ -49,6 +55,9 @@ export default function EditorPage({ note }: { note: Note }) {
   }, [font]);
 
   const handleSave = useCallback(async (data: OutputData) => {
+    const currentNote = noteRef.current;
+    if (!currentNote) return;
+    
     try {
       const title = getNoteTitle(data) || "শিরোনামহীন নোট";
       const totalChars = data.blocks
@@ -56,23 +65,22 @@ export default function EditorPage({ note }: { note: Note }) {
         .join(" ")
         .replace(/&nbsp;|<[^>]+>/g, "").length;
       
-      await updateNote(note.id, {
+      await updateNoteInStore(currentNote.id, {
         title,
         content: data,
         charCount: totalChars,
       });
+
       setCharCount(totalChars);
     } catch (error) {
       toast.error("নোট সংরক্ষণ করতে ব্যর্থ হয়েছে।");
+      console.error("Save error:", error);
     }
-  }, [note.id]);
+  }, [updateNoteInStore]);
 
   const handleManualSave = async () => {
-    // This function is now mostly for providing user feedback,
-    // as saving is handled automatically by the EditorWrapper component.
     setSaveStatus("saving");
     toast.success("নোট সফলভাবে সংরক্ষণ করা হয়েছে!");
-    // The autosave will eventually set it to "saved"
     setTimeout(() => setSaveStatus("saved"), 1000);
   };
 

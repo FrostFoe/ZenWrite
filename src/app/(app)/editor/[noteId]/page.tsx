@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -17,22 +18,27 @@ export default function Page() {
   useEffect(() => {
     if (!noteId) return;
 
+    // This case should not be hit with the new flow, but as a fallback, redirect.
     if (noteId === "new") {
-      // This case should ideally not be hit with the new flow,
-      // but as a fallback, we redirect to notes.
       router.replace("/notes");
       return;
     }
 
     const fetchNote = async () => {
-      const fetchedNote = await getNote(noteId);
-      if (!fetchedNote) {
-        // If no note is found, redirect to the main notes page.
+      try {
+        const fetchedNote = await getNote(noteId);
+        if (fetchedNote) {
+          setNote(fetchedNote);
+        } else {
+          // If no note is found, redirect to the main notes page.
+          router.replace("/notes");
+        }
+      } catch (error) {
+        console.error("Failed to fetch note:", error);
         router.replace("/notes");
-      } else {
-        setNote(fetchedNote);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     fetchNote();
@@ -42,9 +48,8 @@ export default function Page() {
     return <Loading />;
   }
 
+  // This can be shown briefly before router.replace() kicks in or if note fetch fails.
   if (!note) {
-    // This state can be reached briefly before router.replace() kicks in
-    // or if the note is not found.
     return <Loading />;
   }
 

@@ -32,6 +32,7 @@ export const useSettingsStore = create<SettingsState>()(
     {
       name: "mnrnotes-settings-storage",
       storage: createJSONStorage(() => localStorage),
+      // Only persist font and user profile settings
       partialize: (state) => ({
         font: state.font,
         userProfile: state.userProfile,

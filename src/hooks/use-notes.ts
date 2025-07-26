@@ -30,55 +30,53 @@ const useNotesStore = create<NotesState>((set, get) => ({
   trashedNotes: [],
   isLoading: false,
   hasFetched: false,
+  
   resetState: () => set({ notes: [], trashedNotes: [], hasFetched: false, isLoading: false }),
 
-  // Fetch notes from local DB
   fetchNotes: async () => {
-    if (get().hasFetched) return;
+    if (get().isLoading) return;
     set({ isLoading: true });
     try {
       const notes = await localDB.getNotes();
-      set({ notes, isLoading: false, hasFetched: true });
+      set({ notes, hasFetched: true });
     } catch (error) {
       console.error("Failed to fetch notes:", error);
+    } finally {
       set({ isLoading: false });
     }
   },
 
-  // Fetch trashed notes from local DB
   fetchTrashedNotes: async () => {
+    if (get().isLoading) return;
     set({ isLoading: true });
     try {
       const trashedNotes = await localDB.getTrashedNotes();
-      set({ trashedNotes, isLoading: false });
+      set({ trashedNotes });
     } catch (error) {
       console.error("Failed to fetch trashed notes:", error);
+    } finally {
       set({ isLoading: false });
     }
   },
 
   createNote: async () => {
-    set({ isLoading: true });
     try {
-      const noteId = await localDB.createNote();
-      await get().fetchNotes(); // Re-fetch to get the new note
-      get().resetState();
-      await get().fetchNotes();
-      set({isLoading: false});
-      return noteId;
+      const newNote = await localDB.createNote();
+      set((state) => ({
+        notes: [newNote, ...state.notes],
+      }));
+      return newNote.id;
     } catch (error) {
       console.error("Failed to create note:", error);
-      set({ isLoading: false });
       return undefined;
     }
   },
 
   addImportedNotes: (importedNotes: Note[]) => {
-    localDB.importNotesWithData(importedNotes);
     const existingIds = new Set(get().notes.map(n => n.id));
     const newNotes = importedNotes.filter(n => !existingIds.has(n.id));
     set((state) => ({
-      notes: [...newNotes, ...state.notes],
+      notes: [...state.notes, ...newNotes],
     }));
   },
 
@@ -88,17 +86,16 @@ const useNotesStore = create<NotesState>((set, get) => ({
 
     set((state) => ({
       notes: state.notes.filter((note) => note.id !== id),
-      trashedNotes: [noteToTrash, ...state.trashedNotes],
+      trashedNotes: [{ ...noteToTrash, isTrashed: true }, ...state.trashedNotes],
     }));
 
     try {
       await localDB.trashNote(id);
     } catch (error) {
-      set((state) => ({
-        notes: [noteToTrash, ...state.notes],
-        trashedNotes: state.trashedNotes.filter((note) => note.id !== id),
-      }));
       console.error("Failed to trash note:", error);
+      // Revert state if DB operation fails
+      get().fetchNotes(); 
+      get().fetchTrashedNotes();
     }
   },
 
@@ -113,6 +110,8 @@ const useNotesStore = create<NotesState>((set, get) => ({
       await localDB.updateNote(id, updates);
     } catch (error) {
       console.error("Failed to update note in DB:", error);
+       // Optional: Revert state if DB operation fails
+       get().fetchNotes();
     }
   },
 
@@ -128,11 +127,10 @@ const useNotesStore = create<NotesState>((set, get) => ({
     try {
       await localDB.restoreNote(id);
     } catch (error) {
-      set((state) => ({
-        notes: state.notes.filter((note) => note.id !== id),
-        trashedNotes: [noteToRestore, ...state.trashedNotes],
-      }));
       console.error("Failed to restore note:", error);
+      // Revert state if DB operation fails
+      get().fetchNotes();
+      get().fetchTrashedNotes();
     }
   },
 
@@ -171,17 +169,13 @@ const useNotesStore = create<NotesState>((set, get) => ({
     const allNotes = [...(backupData.notes || []), ...(backupData.trashed || [])];
     if (allNotes.length > 0) {
       await localDB.importNotesWithData(allNotes);
+      // Force a full re-fetch to update the UI correctly
       get().resetState();
       await get().fetchNotes();
+      await get().fetchTrashedNotes();
     }
     return allNotes.length;
   }
 }));
-
-
-// Initial fetch on client side, if not already fetched.
-if (typeof window !== "undefined") {
-  useNotesStore.getState().fetchNotes();
-}
 
 export const useNotes = useNotesStore;
