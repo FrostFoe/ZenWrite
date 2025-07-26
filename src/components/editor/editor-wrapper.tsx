@@ -1,8 +1,8 @@
+
 "use client";
 
 import React, { useRef, useEffect, useState, useCallback, memo } from "react";
 import EditorJS, { type OutputData } from "@editorjs/editorjs";
-import { useDebounce } from "use-debounce";
 import { EDITOR_TOOLS } from "@/lib/editorjs/tools";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
@@ -31,9 +31,17 @@ const EditorWrapper = ({
   setSaveStatus,
 }: EditorWrapperProps) => {
   const ejInstance = useRef<EditorJS | null>(null);
-  const [editorData, setEditorData] = useState<OutputData>(initialData);
+  const isDirty = useRef(false); // To track if there are unsaved changes
 
-  const [debouncedEditorData] = useDebounce(editorData, 1500);
+  const saveContent = useCallback(async () => {
+    if (ejInstance.current && isDirty.current) {
+      setSaveStatus("saving");
+      const content = await ejInstance.current.saver.save();
+      await onSave(content);
+      isDirty.current = false;
+      setSaveStatus("saved");
+    }
+  }, [onSave, setSaveStatus]);
 
   const initEditor = useCallback(() => {
     if (ejInstance.current) {
@@ -47,10 +55,10 @@ const EditorWrapper = ({
         ejInstance.current = editor;
       },
       onChange: async (api) => {
-        const content = await api.saver.save();
-        setEditorData(content);
+        isDirty.current = true;
         setSaveStatus("unsaved");
 
+        const content = await api.saver.save();
         const text = content.blocks
           .map((block) => block.data.text || "")
           .join(" ");
@@ -59,32 +67,35 @@ const EditorWrapper = ({
       placeholder: "আসুন একটি অসাধারণ গল্প লিখি!",
       tools: EDITOR_TOOLS,
     });
-  }, [initialData, setSaveStatus, setCharCount]);
+  }, [initialData, setCharCount, setSaveStatus]);
 
+  // Initialize editor
   useEffect(() => {
     if (!ejInstance.current) {
       initEditor();
     }
     return () => {
+      // Save on component unmount (e.g., navigating away)
+      saveContent();
+
       if (ejInstance.current?.destroy) {
         ejInstance.current.destroy();
         ejInstance.current = null;
       }
     };
-  }, [initEditor]);
-
+  }, [initEditor, saveContent]);
+  
+  // Autosave interval (every 30 seconds)
   useEffect(() => {
-    const saveContent = async () => {
-      if (!debouncedEditorData || debouncedEditorData.blocks.length === 0) {
-        return;
-      }
-      setSaveStatus("saving");
-      await onSave(debouncedEditorData);
-      setSaveStatus("saved");
-    };
-    saveContent();
-  }, [debouncedEditorData, onSave, setSaveStatus]);
+    const interval = setInterval(() => {
+      saveContent();
+    }, 30000); // 30 seconds
 
+    return () => clearInterval(interval);
+  }, [saveContent]);
+
+
+  // Zen mode escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && isZenMode) {
