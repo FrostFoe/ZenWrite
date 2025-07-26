@@ -1,8 +1,11 @@
+
 "use client";
 
 import { Note } from "./types";
 import { get, set, del, keys, setMany } from "idb-keyval";
 import type { OutputData } from "@editorjs/editorjs";
+
+const MAX_HISTORY_LENGTH = 20;
 
 // Create a new note
 export const createNote = async (): Promise<string> => {
@@ -19,6 +22,7 @@ export const createNote = async (): Promise<string> => {
     updatedAt: Date.now(),
     charCount: 0,
     isTrashed: false,
+    history: [],
   };
   await set(id, newNote);
   return id;
@@ -52,23 +56,47 @@ export const getTrashedNotes = async (): Promise<Note[]> => {
 // Update a note
 export const updateNote = async (
   id: string,
-  updates: Partial<Note>,
+  updates: Partial<Omit<Note, 'history'>>,
 ): Promise<void> => {
   const note = await get<Note>(id);
   if (note) {
-    const updatedNote = { ...note, ...updates, updatedAt: Date.now() };
+    const newHistoryEntry = {
+      content: note.content,
+      updatedAt: note.updatedAt,
+    };
+
+    // Add to history and keep it trimmed
+    const newHistory = [newHistoryEntry, ...(note.history || [])].slice(
+      0,
+      MAX_HISTORY_LENGTH
+    );
+
+    const updatedNote: Note = {
+      ...note,
+      ...updates,
+      updatedAt: Date.now(),
+      history: newHistory,
+    };
     await set(id, updatedNote);
   }
 };
 
 // Move a note to trash
 export const trashNote = async (id: string): Promise<void> => {
-  await updateNote(id, { isTrashed: true });
+  const note = await get<Note>(id);
+   if (note) {
+    const updatedNote = { ...note, isTrashed: true, updatedAt: Date.now() };
+    await set(id, updatedNote);
+  }
 };
 
 // Restore a note from trash
 export const restoreNote = async (id: string): Promise<void> => {
-  await updateNote(id, { isTrashed: false });
+   const note = await get<Note>(id);
+   if (note) {
+    const updatedNote = { ...note, isTrashed: false, updatedAt: Date.now() };
+    await set(id, updatedNote);
+  }
 };
 
 // Delete a note permanently
@@ -131,6 +159,7 @@ export const importNotes = (file: File): Promise<Note[]> => {
               updatedAt: noteData.updatedAt || Date.now(),
               charCount: noteData.charCount || 0,
               isTrashed: noteData.isTrashed || false,
+              history: noteData.history || [],
             };
             validatedNotes.push(newNote);
           }
@@ -161,5 +190,3 @@ export const getNoteTitle = (data: OutputData): string => {
   }
   return "শিরোনামহীন নোট";
 };
-
-    

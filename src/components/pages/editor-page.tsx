@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -97,6 +98,7 @@ export default function EditorPage({ note }: { note: Note }) {
             isZenMode={isZenMode}
             setIsZenMode={setIsZenMode}
             charCount={charCount}
+            noteId={note.id}
           />
           <EditorWrapper
             noteId={note.id}

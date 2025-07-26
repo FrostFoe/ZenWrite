@@ -1,4 +1,10 @@
+
 import type { OutputData } from "@editorjs/editorjs";
+
+export interface NoteHistory {
+  content: OutputData;
+  updatedAt: number;
+}
 
 export interface Note {
   id: string;
@@ -11,6 +17,7 @@ export interface Note {
   collectionId?: string;
   coverImage?: string; // base64 or a local URL
   isTrashed: boolean;
+  history?: NoteHistory[];
 }
 
 export interface Collection {
