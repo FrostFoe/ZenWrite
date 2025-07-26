@@ -49,7 +49,7 @@
   }
 
   .prose {
-    --tw-prose-body: hsl(var(--foreground) / 0.8);
+    --tw-prose-body: hsl(var(--foreground));
     --tw-prose-headings: hsl(var(--foreground));
     --tw-prose-lead: hsl(var(--foreground));
     --tw-prose-links: hsl(var(--foreground));
@@ -68,7 +68,7 @@
   }
   
   .dark .prose {
-    --tw-prose-body: hsl(var(--foreground) / 0.8);
+    --tw-prose-body: hsl(var(--foreground));
     --tw-prose-headings: hsl(var(--foreground));
     --tw-prose-lead: hsl(var(--foreground));
     --tw-prose-links: hsl(var(--foreground));
