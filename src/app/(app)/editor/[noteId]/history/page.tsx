@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import NoteHistoryTimeline from "@/components/ui/note-history-timeline";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { useSettings } from "@/hooks/use-settings";
+import { useSettingsStore } from "@/hooks/use-settings";
 
 export default function NoteHistoryPage() {
   const params = useParams();
@@ -20,7 +20,7 @@ export default function NoteHistoryPage() {
   const noteId = params.noteId as string;
   const [note, setNote] = useState<Note | null>(null);
   const [loading, setLoading] = useState(true);
-  const { settings } = useSettings();
+  const font = useSettingsStore((state) => state.font);
 
   useEffect(() => {
     const fetchNote = async () => {
@@ -72,7 +72,7 @@ export default function NoteHistoryPage() {
     return null;
   }
 
-  const fontClass = settings.font.split(" ")[0];
+  const fontClass = font.split(" ")[0];
 
   return (
     <div className="flex h-full bg-background">

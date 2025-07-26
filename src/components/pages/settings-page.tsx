@@ -2,7 +2,7 @@
 "use client";
 
 import { useRef } from "react";
-import { useSettings } from "@/hooks/use-settings";
+import { useSettingsStore } from "@/hooks/use-settings";
 import {
   Card,
   CardContent,
@@ -45,9 +45,19 @@ const fonts = [
 ];
 
 export default function SettingsPage() {
-  const { settings, setSetting, setUserProfile, clearUserProfile } = useSettings();
+  const { 
+    theme, 
+    font, 
+    isDriveSyncEnabled, 
+    userProfile, 
+    setSetting, 
+    setUserProfile, 
+    clearUserProfile,
+    toggleDriveSync
+  } = useSettingsStore();
+  
   const router = useRouter();
-  const fontClass = settings.font.split(" ")[0];
+  const fontClass = font.split(" ")[0];
   const importInputRef = useRef<HTMLInputElement>(null);
   const addImportedNotes = useNotes((state) => state.addImportedNotes);
 
@@ -153,7 +163,7 @@ export default function SettingsPage() {
                 <div className="space-y-2">
                   <Label htmlFor="theme-select">থিম</Label>
                   <Select
-                    value={settings.theme}
+                    value={theme}
                     onValueChange={(value) => setSetting("theme", value)}
                   >
                     <SelectTrigger id="theme-select">
@@ -171,7 +181,7 @@ export default function SettingsPage() {
                 <div className="space-y-2">
                   <Label htmlFor="font-select">ফন্ট</Label>
                   <Select
-                    value={settings.font}
+                    value={font}
                     onValueChange={(value) => setSetting("font", value)}
                   >
                     <SelectTrigger id="font-select">
@@ -197,24 +207,24 @@ export default function SettingsPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col items-center justify-center space-y-4 h-full">
-                {settings.userProfile ? (
+                {userProfile ? (
                   <>
                     <Avatar>
-                      <AvatarImage src={settings.userProfile.picture} alt={settings.userProfile.name} />
+                      <AvatarImage src={userProfile.picture} alt={userProfile.name} />
                       <AvatarFallback>
                         <User />
                       </AvatarFallback>
                     </Avatar>
                     <div className="text-center">
-                      <p className="font-semibold">{settings.userProfile.name}</p>
-                      <p className="text-sm text-muted-foreground">{settings.userProfile.email}</p>
+                      <p className="font-semibold">{userProfile.name}</p>
+                      <p className="text-sm text-muted-foreground">{userProfile.email}</p>
                     </div>
                     <div className="flex items-center space-x-2 w-full pt-4">
                       <Label htmlFor="drive-sync-switch" className="flex-grow">Drive সিঙ্ক চালু করুন</Label>
                       <Switch
                         id="drive-sync-switch"
-                        checked={settings.isDriveSyncEnabled}
-                        onCheckedChange={(checked) => setSetting("isDriveSyncEnabled", checked)}
+                        checked={isDriveSyncEnabled}
+                        onCheckedChange={(checked) => toggleDriveSync(checked)}
                       />
                     </div>
                     <Button onClick={handleLogout} variant="outline" className="w-full">

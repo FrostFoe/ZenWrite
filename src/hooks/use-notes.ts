@@ -5,7 +5,7 @@ import { create } from "zustand";
 import * as localDB from "@/lib/storage";
 import * as driveDB from "@/lib/drive-storage";
 import type { Note } from "@/lib/types";
-import { useSettings } from "./use-settings";
+import { useSettingsStore } from "./use-settings";
 
 interface NotesState {
   notes: Note[];
@@ -32,7 +32,7 @@ const useNotesStore = create<NotesState>((set, get) => ({
   fetchNotes: async () => {
     if (get().hasFetched) return;
     set({ isLoading: true });
-    const { isDriveSyncEnabled, userProfile } = useSettings.getState().settings;
+    const { isDriveSyncEnabled, userProfile } = useSettingsStore.getState();
     try {
       let notes: Note[];
       if (isDriveSyncEnabled && userProfile?.accessToken) {
@@ -48,7 +48,7 @@ const useNotesStore = create<NotesState>((set, get) => ({
   },
   fetchTrashedNotes: async () => {
     set({ isLoading: true });
-    const { isDriveSyncEnabled, userProfile } = useSettings.getState().settings;
+    const { isDriveSyncEnabled, userProfile } = useSettingsStore.getState();
     try {
       let trashedNotes: Note[];
        if (isDriveSyncEnabled && userProfile?.accessToken) {
@@ -64,7 +64,7 @@ const useNotesStore = create<NotesState>((set, get) => ({
   },
   createNote: async () => {
     set({ isLoading: true });
-    const { isDriveSyncEnabled, userProfile } = useSettings.getState().settings;
+    const { isDriveSyncEnabled, userProfile } = useSettingsStore.getState();
     try {
       let noteId;
       if (isDriveSyncEnabled && userProfile?.accessToken) {
@@ -101,7 +101,7 @@ const useNotesStore = create<NotesState>((set, get) => ({
       trashedNotes: [noteToTrash, ...state.trashedNotes],
     }));
 
-    const { isDriveSyncEnabled, userProfile } = useSettings.getState().settings;
+    const { isDriveSyncEnabled, userProfile } = useSettingsStore.getState();
     try {
       if (isDriveSyncEnabled && userProfile?.accessToken) {
         await driveDB.trashNote(userProfile.accessToken, id);
@@ -123,7 +123,7 @@ const useNotesStore = create<NotesState>((set, get) => ({
       ),
     }));
     
-    const { isDriveSyncEnabled, userProfile } = useSettings.getState().settings;
+    const { isDriveSyncEnabled, userProfile } = useSettingsStore.getState();
     const noteToUpdate = get().notes.find(n => n.id === id);
     if (!noteToUpdate) return;
     
@@ -146,7 +146,7 @@ const useNotesStore = create<NotesState>((set, get) => ({
       notes: [{ ...noteToRestore, isTrashed: false }, ...state.notes],
     }));
 
-    const { isDriveSyncEnabled, userProfile } = useSettings.getState().settings;
+    const { isDriveSyncEnabled, userProfile } = useSettingsStore.getState();
     try {
       if (isDriveSyncEnabled && userProfile?.accessToken) {
         await driveDB.restoreNote(userProfile.accessToken, id);
@@ -167,7 +167,7 @@ const useNotesStore = create<NotesState>((set, get) => ({
       trashedNotes: state.trashedNotes.filter((note) => note.id !== id),
     }));
 
-    const { isDriveSyncEnabled, userProfile } = useSettings.getState().settings;
+    const { isDriveSyncEnabled, userProfile } = useSettingsStore.getState();
     try {
       if (isDriveSyncEnabled && userProfile?.accessToken) {
         await driveDB.deleteNotePermanently(userProfile.accessToken, id);
@@ -182,8 +182,8 @@ const useNotesStore = create<NotesState>((set, get) => ({
 }));
 
 // Re-fetch notes when sync settings change
-useSettings.subscribe((state, prevState) => {
-  if (state.settings.isDriveSyncEnabled !== prevState.settings.isDriveSyncEnabled || state.settings.userProfile?.email !== prevState.settings.userProfile?.email) {
+useSettingsStore.subscribe((state, prevState) => {
+  if (state.isDriveSyncEnabled !== prevState.isDriveSyncEnabled || state.userProfile?.email !== prevState.userProfile?.email) {
     useNotesStore.getState().resetState();
     useNotesStore.getState().fetchNotes();
   }

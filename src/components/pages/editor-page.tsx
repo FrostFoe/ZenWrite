@@ -11,7 +11,7 @@ import dynamic from "next/dynamic";
 import EditorHeader from "@/components/editor/editor-header";
 import { Skeleton } from "../ui/skeleton";
 import Sidebar from "../nav/sidebar";
-import { useSettings } from "@/hooks/use-settings";
+import { useSettingsStore } from "@/hooks/use-settings";
 import { AnimatePresence } from "framer-motion";
 
 const EditorWrapper = dynamic(
@@ -39,14 +39,14 @@ export default function EditorPage({ note }: { note: Note }) {
     "saved",
   );
   const [charCount, setCharCount] = useState(note.charCount || 0);
-  const { settings } = useSettings();
+  const font = useSettingsStore((state) => state.font);
   const [fontClass, setFontClass] = useState("");
 
   useEffect(() => {
-    if (settings) {
-      setFontClass(settings.font.split(" ")[0]);
+    if (font) {
+      setFontClass(font.split(" ")[0]);
     }
-  }, [settings]);
+  }, [font]);
 
   const handleSave = useCallback(async (data: OutputData) => {
     try {

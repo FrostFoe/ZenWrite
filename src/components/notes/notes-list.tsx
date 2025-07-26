@@ -5,7 +5,7 @@ import { Note } from "@/lib/types";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { useSettings } from "@/hooks/use-settings";
+import { useSettingsStore } from "@/hooks/use-settings";
 import { cn } from "@/lib/utils";
 import { memo } from "react";
 
@@ -29,8 +29,8 @@ const itemVariants = {
 };
 
 function NotesListComponent({ notes }: NotesListProps) {
-  const { settings } = useSettings();
-  const fontClass = settings.font.split(" ")[0];
+  const font = useSettingsStore((state) => state.font);
+  const fontClass = font.split(" ")[0];
 
   return (
     <motion.div

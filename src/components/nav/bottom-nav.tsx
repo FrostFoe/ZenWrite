@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -5,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { Home, Settings, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { useSettings } from "@/hooks/use-settings";
+import { useSettingsStore } from "@/hooks/use-settings";
 
 const navItems = [
   { href: "/notes", label: "নোট", icon: Home },
@@ -15,8 +16,8 @@ const navItems = [
 
 export default function BottomNav() {
   const pathname = usePathname();
-  const { settings } = useSettings();
-  const fontClass = settings.font.split(" ")[0];
+  const font = useSettingsStore((state) => state.font);
+  const fontClass = font.split(" ")[0];
 
   if (pathname.startsWith("/editor/")) {
     return null;
@@ -66,5 +67,3 @@ export default function BottomNav() {
     </AnimatePresence>
   );
 }
-
-    

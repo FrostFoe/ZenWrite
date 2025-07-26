@@ -1,12 +1,13 @@
+
 "use client";
 
 import * as React from "react";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { type ThemeProviderProps } from "next-themes/dist/types";
-import { useSettings } from "@/hooks/use-settings";
+import { useSettingsStore } from "@/hooks/use-settings";
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
-  const { settings } = useSettings();
+  const { theme, font } = useSettingsStore();
 
   React.useEffect(() => {
     // Clean up all possible theme classes
@@ -19,8 +20,8 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
       "theme-sakura-dream"
     );
     // Add the currently selected theme class
-    if (settings.theme) {
-      document.body.classList.add(settings.theme);
+    if (theme) {
+      document.body.classList.add(theme);
     }
     
     // Clean up all possible font classes from the html element
@@ -30,15 +31,15 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
         "font-baloo-da-2"
     );
     // Add the currently selected font class to the html element
-    if (settings.font) {
-      document.documentElement.classList.add(settings.font);
+    if (font) {
+      document.documentElement.classList.add(font);
     }
 
-  }, [settings.theme, settings.font]);
+  }, [theme, font]);
 
   return (
     <NextThemesProvider {...props}>
-      <div className={`${settings.theme} ${settings.font}`}>{children}</div>
+      <div className={`${theme} ${font}`}>{children}</div>
     </NextThemesProvider>
   );
 }

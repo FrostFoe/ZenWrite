@@ -41,7 +41,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Note } from "@/lib/types";
 import { getTextFromEditorJS, cn } from "@/lib/utils";
-import { useSettings } from "@/hooks/use-settings";
+import { useSettingsStore } from "@/hooks/use-settings";
 import { useNotes } from "@/hooks/use-notes";
 import { MoreVertical, Edit, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -52,10 +52,10 @@ interface NoteCardProps {
 
 function NoteCardComponent({ note }: NoteCardProps) {
   const [formattedDate, setFormattedDate] = React.useState("");
-  const { settings } = useSettings();
+  const font = useSettingsStore((state) => state.font);
   const trashNote = useNotes((state) => state.trashNote);
   const updateNote = useNotes((state) => state.updateNote);
-  const fontClass = settings.font.split(" ")[0];
+  const fontClass = font.split(" ")[0];
 
   const [isRenameOpen, setIsRenameOpen] = React.useState(false);
   const [newTitle, setNewTitle] = React.useState(note.title);

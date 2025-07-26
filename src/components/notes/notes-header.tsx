@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -10,7 +11,7 @@ import {
 import { Button } from "../ui/button";
 import { LayoutGrid, List, Plus } from "lucide-react";
 import Link from "next/link";
-import { useSettings } from "@/hooks/use-settings";
+import { useSettingsStore } from "@/hooks/use-settings";
 import { cn } from "@/lib/utils";
 
 type SortOption =
@@ -29,8 +30,8 @@ export default function NotesHeader({
   viewMode,
   setViewMode,
 }: NotesHeaderProps) {
-  const { settings } = useSettings();
-  const [fontClass] = settings.font.split(" ");
+  const font = useSettingsStore((state) => state.font);
+  const [fontClass] = font.split(" ");
   return (
     <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
       <h1

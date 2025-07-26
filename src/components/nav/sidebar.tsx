@@ -1,10 +1,11 @@
+
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Settings, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useSettings } from "@/hooks/use-settings";
+import { useSettingsStore } from "@/hooks/use-settings";
 
 const navItems = [
   { href: "/notes", label: "নোট সমূহ", icon: Home },
@@ -14,8 +15,8 @@ const navItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { settings } = useSettings();
-  const fontClass = settings.font.split(" ")[0];
+  const font = useSettingsStore((state) => state.font);
+  const fontClass = font.split(" ")[0];
 
   return (
     <aside className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
@@ -59,5 +60,3 @@ export default function Sidebar() {
     </aside>
   );
 }
-
-    

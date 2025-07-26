@@ -7,7 +7,7 @@ import { Note } from "@/lib/types";
 import Sidebar from "@/components/nav/sidebar";
 import { NotesGrid } from "@/components/notes/notes-grid";
 import NotesHeader from "@/components/notes/notes-header";
-import { useSettings } from "@/hooks/use-settings";
+import { useSettingsStore } from "@/hooks/use-settings";
 import { useNotes } from "@/hooks/use-notes";
 import { cn } from "@/lib/utils";
 import { importNotes } from "@/lib/storage";
@@ -28,7 +28,7 @@ export default function NotesPage({
   initialNotes: Note[];
 }) {
   const router = useRouter();
-  const { settings } = useSettings();
+  const { font, isDriveSyncEnabled } = useSettingsStore();
   
   // Zustand selectors for performance
   const notes = useNotes((state) => state.notes);
@@ -39,12 +39,12 @@ export default function NotesPage({
 
   const [sortOption, setSortOption] = useState<SortOption>("updatedAt-desc");
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
-  const fontClass = settings.font.split(" ")[0];
+  const fontClass = font.split(" ")[0];
   const importInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchNotes();
-  }, [fetchNotes, settings.isDriveSyncEnabled]); // Re-fetch if sync is toggled
+  }, [fetchNotes, isDriveSyncEnabled]); // Re-fetch if sync is toggled
 
   const handleNewNote = async () => {
     try {
@@ -62,7 +62,7 @@ export default function NotesPage({
   };
 
   const handleImportClick = () => {
-    if (settings.isDriveSyncEnabled) {
+    if (isDriveSyncEnabled) {
       toast.info("ড্রাইভ সিঙ্ক চালু থাকা অবস্থায় নোট ইম্পোর্ট করা যাবে না।");
       return;
     }

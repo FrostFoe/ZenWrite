@@ -9,7 +9,7 @@ import Sidebar from "@/components/nav/sidebar";
 import { useNotes } from "@/hooks/use-notes";
 import Loading from "@/app/loading";
 import { cn } from "@/lib/utils";
-import { useSettings } from "@/hooks/use-settings";
+import { useSettingsStore } from "@/hooks/use-settings";
 import { Trash2, RotateCcw } from "lucide-react";
 import {
   AlertDialog,
@@ -27,7 +27,7 @@ import { formatDistanceToNow } from "date-fns";
 import { bn } from "date-fns/locale";
 
 export default function TrashPage() {
-  const { settings } = useSettings();
+  const font = useSettingsStore((state) => state.font);
   const router = useRouter();
 
   // Zustand selectors for performance
@@ -60,10 +60,10 @@ export default function TrashPage() {
   return (
     <div className="flex h-full bg-background">
       <Sidebar />
-      <div className={cn("flex-1 lg:pl-72", settings.font.split(" ")[0])}>
+      <div className={cn("flex-1 lg:pl-72", font.split(" ")[0])}>
         <div className="h-full space-y-8 p-4 sm:p-6 lg:p-8">
           <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <h1 className={cn("text-3xl font-bold tracking-tight text-foreground sm:text-4xl", settings.font.split(" ")[0])}>
+            <h1 className={cn("text-3xl font-bold tracking-tight text-foreground sm:text-4xl", font.split(" ")[0])}>
               ট্র্যাশ
             </h1>
           </header>
