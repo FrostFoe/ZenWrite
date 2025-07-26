@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Tiro_Bangla, Hind_Siliguri, Baloo_Da_2 } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "sonner";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 import "./globals.css";
 
@@ -40,6 +41,9 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
+// IMPORTANT: Replace with your actual Google Client ID
+const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -52,15 +56,17 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="font-sans antialiased">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-          <Toaster richColors />
-        </ThemeProvider>
+        <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+            <Toaster richColors />
+          </ThemeProvider>
+        </GoogleOAuthProvider>
       </body>
     </html>
   );

@@ -30,6 +30,7 @@
     "@radix-ui/react-slot": "^1.1.0",
     "@radix-ui/react-switch": "^1.1.0",
     "@radix-ui/react-toast": "^1.2.1",
+    "@react-oauth/google": "^0.12.1",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
@@ -54,6 +55,7 @@
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.13",
     "@types/editorjs__header": "^2.6.3",
+    "@types/gapi": "^0.0.47",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

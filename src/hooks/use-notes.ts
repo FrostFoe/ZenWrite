@@ -2,21 +2,16 @@
 "use client";
 
 import { create } from "zustand";
-import {
-  getNotes as getNotesFromDB,
-  trashNote as trashNoteInDB,
-  updateNote as updateNoteInDB,
-  getTrashedNotes as getTrashedNotesFromDB,
-  restoreNote as restoreNoteInDB,
-  deleteNotePermanently as deleteNotePermanentlyInDB,
-} from "@/lib/storage";
+import * as localDB from "@/lib/storage";
+import * as driveDB from "@/lib/drive-storage";
 import type { Note } from "@/lib/types";
+import { useSettings } from "./use-settings";
 
 interface NotesState {
   notes: Note[];
   trashedNotes: Note[];
   isLoading: boolean;
-  hasFetched: boolean; // To prevent multiple fetches
+  hasFetched: boolean;
   fetchNotes: () => Promise<void>;
   fetchTrashedNotes: () => Promise<void>;
   addImportedNotes: (importedNotes: Note[]) => void;
@@ -24,18 +19,27 @@ interface NotesState {
   updateNote: (id: string, updates: Partial<Note>) => Promise<void>;
   restoreNote: (id: string) => Promise<void>;
   deleteNotePermanently: (id: string) => Promise<void>;
+  createNote: () => Promise<string | undefined>;
+  resetState: () => void;
 }
 
-export const useNotes = create<NotesState>((set, get) => ({
+const useNotesStore = create<NotesState>((set, get) => ({
   notes: [],
   trashedNotes: [],
   isLoading: false,
   hasFetched: false,
+  resetState: () => set({ notes: [], trashedNotes: [], hasFetched: false, isLoading: false }),
   fetchNotes: async () => {
-    if (get().hasFetched) return; // Don't fetch if already fetched
+    if (get().hasFetched) return;
     set({ isLoading: true });
+    const { isDriveSyncEnabled, userProfile } = useSettings.getState().settings;
     try {
-      const notes = await getNotesFromDB();
+      let notes: Note[];
+      if (isDriveSyncEnabled && userProfile?.accessToken) {
+        notes = await driveDB.getNotes(userProfile.accessToken);
+      } else {
+        notes = await localDB.getNotes();
+      }
       set({ notes, isLoading: false, hasFetched: true });
     } catch (error) {
       console.error("Failed to fetch notes:", error);
@@ -44,15 +48,44 @@ export const useNotes = create<NotesState>((set, get) => ({
   },
   fetchTrashedNotes: async () => {
     set({ isLoading: true });
+    const { isDriveSyncEnabled, userProfile } = useSettings.getState().settings;
     try {
-      const trashedNotes = await getTrashedNotesFromDB();
+      let trashedNotes: Note[];
+       if (isDriveSyncEnabled && userProfile?.accessToken) {
+        trashedNotes = await driveDB.getTrashedNotes(userProfile.accessToken);
+      } else {
+        trashedNotes = await localDB.getTrashedNotes();
+      }
       set({ trashedNotes, isLoading: false });
     } catch (error) {
       console.error("Failed to fetch trashed notes:", error);
       set({ isLoading: false });
     }
   },
+  createNote: async () => {
+    set({ isLoading: true });
+    const { isDriveSyncEnabled, userProfile } = useSettings.getState().settings;
+    try {
+      let noteId;
+      if (isDriveSyncEnabled && userProfile?.accessToken) {
+        noteId = await driveDB.createNote(userProfile.accessToken);
+      } else {
+        noteId = await localDB.createNote();
+      }
+      await get().fetchNotes(); // Re-fetch to get the new note
+      get().resetState();
+      await get().fetchNotes();
+      set({isLoading: false});
+      return noteId;
+    } catch (error) {
+      console.error("Failed to create note:", error);
+      set({ isLoading: false });
+      return undefined;
+    }
+  },
   addImportedNotes: (importedNotes: Note[]) => {
+    // This will only support local import for now.
+    localDB.importNotesWithData(importedNotes);
     const existingIds = new Set(get().notes.map(n => n.id));
     const newNotes = importedNotes.filter(n => !existingIds.has(n.id));
     set((state) => ({
@@ -68,10 +101,14 @@ export const useNotes = create<NotesState>((set, get) => ({
       trashedNotes: [noteToTrash, ...state.trashedNotes],
     }));
 
+    const { isDriveSyncEnabled, userProfile } = useSettings.getState().settings;
     try {
-      await trashNoteInDB(id);
+      if (isDriveSyncEnabled && userProfile?.accessToken) {
+        await driveDB.trashNote(userProfile.accessToken, id);
+      } else {
+        await localDB.trashNote(id);
+      }
     } catch (error) {
-      // Revert state on failure
       set((state) => ({
         notes: [noteToTrash, ...state.notes],
         trashedNotes: state.trashedNotes.filter((note) => note.id !== id),
@@ -86,12 +123,18 @@ export const useNotes = create<NotesState>((set, get) => ({
       ),
     }));
     
+    const { isDriveSyncEnabled, userProfile } = useSettings.getState().settings;
+    const noteToUpdate = get().notes.find(n => n.id === id);
+    if (!noteToUpdate) return;
+    
     try {
-      // The DB update is now essentially debounced by the editor's save logic
-      await updateNoteInDB(id, updates);
+      if (isDriveSyncEnabled && userProfile?.accessToken) {
+        await driveDB.updateNote(userProfile.accessToken, id, noteToUpdate);
+      } else {
+        await localDB.updateNote(id, updates);
+      }
     } catch (error) {
       console.error("Failed to update note in DB:", error);
-      // Optional: Revert state here if DB update fails
     }
   },
   restoreNote: async (id: string) => {
@@ -103,8 +146,13 @@ export const useNotes = create<NotesState>((set, get) => ({
       notes: [{ ...noteToRestore, isTrashed: false }, ...state.notes],
     }));
 
+    const { isDriveSyncEnabled, userProfile } = useSettings.getState().settings;
     try {
-      await restoreNoteInDB(id);
+      if (isDriveSyncEnabled && userProfile?.accessToken) {
+        await driveDB.restoreNote(userProfile.accessToken, id);
+      } else {
+        await localDB.restoreNote(id);
+      }
     } catch (error) {
       set((state) => ({
         notes: state.notes.filter((note) => note.id !== id),
@@ -118,8 +166,14 @@ export const useNotes = create<NotesState>((set, get) => ({
     set((state) => ({
       trashedNotes: state.trashedNotes.filter((note) => note.id !== id),
     }));
+
+    const { isDriveSyncEnabled, userProfile } = useSettings.getState().settings;
     try {
-      await deleteNotePermanentlyInDB(id);
+      if (isDriveSyncEnabled && userProfile?.accessToken) {
+        await driveDB.deleteNotePermanently(userProfile.accessToken, id);
+      } else {
+        await localDB.deleteNotePermanently(id);
+      }
     } catch (error) {
       console.error("Failed to permanently delete note:", error);
       set({ trashedNotes: originalTrashed });
@@ -127,7 +181,17 @@ export const useNotes = create<NotesState>((set, get) => ({
   },
 }));
 
+// Re-fetch notes when sync settings change
+useSettings.subscribe((state, prevState) => {
+  if (state.settings.isDriveSyncEnabled !== prevState.settings.isDriveSyncEnabled || state.settings.userProfile?.email !== prevState.settings.userProfile?.email) {
+    useNotesStore.getState().resetState();
+    useNotesStore.getState().fetchNotes();
+  }
+});
+
 // Initial fetch on client side, if not already fetched.
 if (typeof window !== "undefined") {
-  useNotes.getState().fetchNotes();
+  useNotesStore.getState().fetchNotes();
 }
+
+export const useNotes = useNotesStore;

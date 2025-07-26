@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { clearAllNotes, exportNotes, importNotes } from "@/lib/storage";
@@ -25,6 +26,9 @@ import { useRouter } from "next/navigation";
 import Sidebar from "../nav/sidebar";
 import { cn } from "@/lib/utils";
 import { useNotes } from "@/hooks/use-notes";
+import { useGoogleLogin, googleLogout } from "@react-oauth/google";
+import { Switch } from "../ui/switch";
+import { User, LogOut } from "lucide-react";
 
 const themes = [
   { value: "theme-vanilla-fog", label: "Vanilla Fog" },
@@ -41,11 +45,40 @@ const fonts = [
 ];
 
 export default function SettingsPage() {
-  const { settings, setSetting } = useSettings();
+  const { settings, setSetting, setUserProfile, clearUserProfile } = useSettings();
   const router = useRouter();
   const fontClass = settings.font.split(" ")[0];
   const importInputRef = useRef<HTMLInputElement>(null);
   const addImportedNotes = useNotes((state) => state.addImportedNotes);
+
+  const login = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        const userInfoRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+        });
+        const userInfo = await userInfoRes.json();
+        setUserProfile({
+          ...userInfo,
+          accessToken: tokenResponse.access_token,
+        });
+        toast.success(`স্বাগতম, ${userInfo.name}!`);
+      } catch (error) {
+        toast.error("ব্যবহারকারীর তথ্য আনতে ব্যর্থ হয়েছে।");
+        console.error(error);
+      }
+    },
+    onError: () => {
+      toast.error("Google সাইন-ইন ব্যর্থ হয়েছে।");
+    },
+    scope: "https://www.googleapis.com/auth/drive.file",
+  });
+
+  const handleLogout = () => {
+    googleLogout();
+    clearUserProfile();
+    toast.info("সফলভাবে সাইন আউট হয়েছেন।");
+  };
 
   const handleExport = () => {
     try {
@@ -108,7 +141,7 @@ export default function SettingsPage() {
             </p>
           </header>
 
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             <Card>
               <CardHeader>
                 <CardTitle>সাধারণ</CardTitle>
@@ -153,6 +186,47 @@ export default function SettingsPage() {
                     </SelectContent>
                   </Select>
                 </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Google Drive সিঙ্ক</CardTitle>
+                <CardDescription>
+                  আপনার নোট ক্লাউডে ব্যাকআপ এবং সিঙ্ক করুন।
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col items-center justify-center space-y-4 h-full">
+                {settings.userProfile ? (
+                  <>
+                    <Avatar>
+                      <AvatarImage src={settings.userProfile.picture} alt={settings.userProfile.name} />
+                      <AvatarFallback>
+                        <User />
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="text-center">
+                      <p className="font-semibold">{settings.userProfile.name}</p>
+                      <p className="text-sm text-muted-foreground">{settings.userProfile.email}</p>
+                    </div>
+                    <div className="flex items-center space-x-2 w-full pt-4">
+                      <Label htmlFor="drive-sync-switch" className="flex-grow">Drive সিঙ্ক চালু করুন</Label>
+                      <Switch
+                        id="drive-sync-switch"
+                        checked={settings.isDriveSyncEnabled}
+                        onCheckedChange={(checked) => setSetting("isDriveSyncEnabled", checked)}
+                      />
+                    </div>
+                    <Button onClick={handleLogout} variant="outline" className="w-full">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      সাইন আউট
+                    </Button>
+                  </>
+                ) : (
+                  <Button onClick={() => login()} className="w-full">
+                    Google দিয়ে সাইন ইন করুন
+                  </Button>
+                )}
               </CardContent>
             </Card>
 

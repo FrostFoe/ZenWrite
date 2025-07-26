@@ -6,12 +6,11 @@ import { useRouter } from "next/navigation";
 import { Note } from "@/lib/types";
 import Sidebar from "@/components/nav/sidebar";
 import { NotesGrid } from "@/components/notes/notes-grid";
-import { NotesList as NotesListView } from "@/components/notes/notes-list";
 import NotesHeader from "@/components/notes/notes-header";
 import { useSettings } from "@/hooks/use-settings";
 import { useNotes } from "@/hooks/use-notes";
 import { cn } from "@/lib/utils";
-import { createNote, importNotes } from "@/lib/storage";
+import { importNotes } from "@/lib/storage";
 import { toast } from "sonner";
 import Loading from "@/app/loading";
 import { Button } from "../ui/button";
@@ -35,6 +34,7 @@ export default function NotesPage({
   const notes = useNotes((state) => state.notes);
   const isLoading = useNotes((state) => state.isLoading);
   const fetchNotes = useNotes((state) => state.fetchNotes);
+  const createNote = useNotes((state) => state.createNote);
   const addImportedNotes = useNotes((state) => state.addImportedNotes);
 
   const [sortOption, setSortOption] = useState<SortOption>("updatedAt-desc");
@@ -44,13 +44,17 @@ export default function NotesPage({
 
   useEffect(() => {
     fetchNotes();
-  }, [fetchNotes]);
+  }, [fetchNotes, settings.isDriveSyncEnabled]); // Re-fetch if sync is toggled
 
   const handleNewNote = async () => {
     try {
       const noteId = await createNote();
-      toast.success("নতুন নোট তৈরি হয়েছে!");
-      router.push(`/editor/${noteId}`);
+      if (noteId) {
+        toast.success("নতুন নোট তৈরি হয়েছে!");
+        router.push(`/editor/${noteId}`);
+      } else {
+         toast.error("নোট তৈরি করতে ব্যর্থ হয়েছে।");
+      }
     } catch (error) {
       toast.error("নোট তৈরি করতে ব্যর্থ হয়েছে।");
       console.error(error);
@@ -58,6 +62,10 @@ export default function NotesPage({
   };
 
   const handleImportClick = () => {
+    if (settings.isDriveSyncEnabled) {
+      toast.info("ড্রাইভ সিঙ্ক চালু থাকা অবস্থায় নোট ইম্পোর্ট করা যাবে না।");
+      return;
+    }
     importInputRef.current?.click();
   };
 
@@ -74,7 +82,6 @@ export default function NotesPage({
         toast.error("নোট ইমপোর্ট করতে ব্যর্থ হয়েছে। ফাইল ফরম্যাট সঠিক কিনা তা পরীক্ষা করুন।");
         console.error(error);
       } finally {
-        // Reset file input
         if (importInputRef.current) {
           importInputRef.current.value = "";
         }
@@ -128,7 +135,7 @@ export default function NotesPage({
             viewMode === "grid" ? (
               <NotesGrid notes={sortedNotes} />
             ) : (
-              <NotesListView notes={sortedNotes} />
+              <NotesGrid notes={sortedNotes} />
             )
           ) : (
             <EmptyState

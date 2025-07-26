@@ -2,7 +2,7 @@
 "use client";
 
 import { Note } from "./types";
-import { get, set, del, keys, setMany } from "idb-keyval";
+import { get, set, del, keys, setMany, getMany } from "idb-keyval";
 import type { OutputData } from "@editorjs/editorjs";
 
 const MAX_HISTORY_LENGTH = 20;
@@ -37,7 +37,7 @@ export const getNote = async (id: string): Promise<Note | undefined> => {
 export const getNotes = async (): Promise<Note[]> => {
   const allKeys = await keys();
   const noteKeys = allKeys.filter((key) => String(key).startsWith("note_"));
-  const notes = await Promise.all(noteKeys.map((key) => get<Note>(key)));
+  const notes = await getMany<Note>(noteKeys);
   return notes
     .filter((note): note is Note => !!note && !note.isTrashed)
     .sort((a, b) => b.updatedAt - a.updatedAt);
@@ -47,7 +47,7 @@ export const getNotes = async (): Promise<Note[]> => {
 export const getTrashedNotes = async (): Promise<Note[]> => {
   const allKeys = await keys();
   const noteKeys = allKeys.filter((key) => String(key).startsWith("note_"));
-  const notes = await Promise.all(noteKeys.map((key) => get<Note>(key)));
+  const notes = await getMany<Note>(noteKeys);
   return notes
     .filter((note): note is Note => !!note && note.isTrashed)
     .sort((a, b) => b.updatedAt - a.updatedAt);
@@ -56,7 +56,7 @@ export const getTrashedNotes = async (): Promise<Note[]> => {
 // Update a note
 export const updateNote = async (
   id: string,
-  updates: Partial<Omit<Note, 'history'>>,
+  updates: Partial<Omit<Note, 'history' | 'id'>>,
 ): Promise<void> => {
   const note = await get<Note>(id);
   if (note) {
@@ -131,6 +131,13 @@ export const exportNotes = async () => {
   URL.revokeObjectURL(href);
 };
 
+export const importNotesWithData = async (notesToImport: Note[]): Promise<void> => {
+  if (notesToImport.length > 0) {
+    const entries: [IDBValidKey, Note][] = notesToImport.map(note => [note.id, note]);
+    await setMany(entries);
+  }
+};
+
 // Import notes from a JSON file
 export const importNotes = (file: File): Promise<Note[]> => {
   return new Promise((resolve, reject) => {
@@ -164,11 +171,8 @@ export const importNotes = (file: File): Promise<Note[]> => {
             validatedNotes.push(newNote);
           }
         }
-
-        if (validatedNotes.length > 0) {
-          const entries: [IDBValidKey, Note][] = validatedNotes.map(note => [note.id, note]);
-          await setMany(entries);
-        }
+        
+        await importNotesWithData(validatedNotes);
         
         resolve(validatedNotes);
       } catch (error) {
