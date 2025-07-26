@@ -1,13 +1,14 @@
 
 import type { Note } from "./types";
-import type { OutputData } from "@editorjs/editorjs";
 
 const DRIVE_API_URL = "https://www.googleapis.com/drive/v3/files";
 const DRIVE_UPLOAD_URL = "https://www.googleapis.com/upload/drive/v3/files";
-const APP_FOLDER_NAME = "Amar Note App Data";
-const MAX_HISTORY_LENGTH = 20;
+const BACKUP_FILE_NAME = "amar-note-backup.json";
 
-let appFolderIdCache: string | null = null;
+interface BackupData {
+  notes: Note[];
+  trashed: Note[];
+}
 
 async function getHeaders(accessToken: string) {
   return {
@@ -16,165 +17,84 @@ async function getHeaders(accessToken: string) {
   };
 }
 
-async function getAppFolderId(accessToken: string): Promise<string> {
-  if (appFolderIdCache) {
-    return appFolderIdCache;
-  }
-
+async function findBackupFile(accessToken: string): Promise<string | null> {
   const headers = await getHeaders(accessToken);
-  const query = `mimeType='application/vnd.google-apps.folder' and name='${APP_FOLDER_NAME}' and trashed=false`;
-  const response = await fetch(`${DRIVE_API_URL}?q=${encodeURIComponent(query)}&spaces=drive`, { headers });
-
-  if (!response.ok) {
-    throw new Error("Failed to search for app folder.");
-  }
-
-  const data = await response.json();
-
-  if (data.files.length > 0) {
-    appFolderIdCache = data.files[0].id;
-    return data.files[0].id;
-  } else {
-    const folderMetadata = {
-      name: APP_FOLDER_NAME,
-      mimeType: "application/vnd.google-apps.folder",
-    };
-    const createResponse = await fetch(DRIVE_API_URL, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(folderMetadata),
-    });
-    if (!createResponse.ok) {
-      throw new Error("Failed to create app folder.");
-    }
-    const folder = await createResponse.json();
-    appFolderIdCache = folder.id;
-    return folder.id;
-  }
-}
-
-export async function createNote(accessToken: string): Promise<string> {
-  const folderId = await getAppFolderId(accessToken);
-  const id = `note_${Date.now()}`;
-  const newNote: Note = {
-    id,
-    title: "শিরোনামহীন নোট",
-    content: { time: Date.now(), blocks: [], version: "2.29.1" },
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-    charCount: 0,
-    isTrashed: false,
-    history: [],
-  };
-
-  const fileMetadata = {
-    name: `${id}.json`,
-    parents: [folderId],
-    mimeType: "application/json",
-  };
-
-  const headers = await getHeaders(accessToken);
-  const createResponse = await fetch(DRIVE_API_URL, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(fileMetadata),
-  });
-
-  if (!createResponse.ok) throw new Error("Could not create file metadata in Drive.");
-  const file = await createResponse.json();
-
-  await updateNote(accessToken, file.id, newNote);
-  return file.id; // Return the Drive file ID
-}
-
-export async function getNotes(accessToken: string): Promise<Note[]> {
-  return getNotesByTrashedStatus(accessToken, false);
-}
-
-export async function getTrashedNotes(accessToken: string): Promise<Note[]> {
-  return getNotesByTrashedStatus(accessToken, true);
-}
-
-async function getNotesByTrashedStatus(accessToken: string, isTrashed: boolean): Promise<Note[]> {
-  const folderId = await getAppFolderId(accessToken);
-  const headers = await getHeaders(accessToken);
-  const query = `'${folderId}' in parents and mimeType='application/json' and name starts with 'note_' and trashed=${isTrashed}`;
-
-  const response = await fetch(
-    `${DRIVE_API_URL}?q=${encodeURIComponent(query)}&fields=files(id,name,createdTime,modifiedTime)&spaces=drive`,
-    { headers }
-  );
-
-  if (!response.ok) throw new Error("Failed to list notes from Drive.");
-  const data = await response.json();
-
-  const notes: Note[] = await Promise.all(
-    data.files.map(async (file: any) => {
-      const fileContentRes = await fetch(`${DRIVE_API_URL}/${file.id}?alt=media`, { headers });
-      if (!fileContentRes.ok) return null;
-      const noteData = await fileContentRes.json();
-      return { ...noteData, id: file.id }; // Use Drive ID as the note ID
-    })
-  );
-
-  return notes.filter((n): n is Note => n !== null).sort((a, b) => b.updatedAt - a.updatedAt);
-}
-
-export async function updateNote(accessToken: string, id: string, note: Note): Promise<void> {
-  const headers = await getHeaders(accessToken);
+  const query = `name='${BACKUP_FILE_NAME}' and 'appDataFolder' in parents and trashed=false`;
   
-  const updatedNoteData = { ...note, updatedAt: Date.now() };
-
-  // Add current state to history
-  const newHistoryEntry = {
-    content: note.content,
-    updatedAt: note.updatedAt,
-  };
-  updatedNoteData.history = [newHistoryEntry, ...(note.history || [])].slice(0, MAX_HISTORY_LENGTH);
-  
-  const body = new Blob([JSON.stringify(updatedNoteData)], { type: "application/json" });
-
-  const response = await fetch(`${DRIVE_UPLOAD_URL}/${id}?uploadType=media`, {
-    method: "PATCH",
-    headers: { ...headers, "Content-Type": "application/json" },
-    body,
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to update note in Drive.");
-  }
-}
-
-export async function trashNote(accessToken: string, id: string): Promise<void> {
-  await updateFileMetadata(accessToken, id, { trashed: true });
-}
-
-export async function restoreNote(accessToken: string, id: string): Promise<void> {
-  await updateFileMetadata(accessToken, id, { trashed: false });
-}
-
-export async function deleteNotePermanently(accessToken: string, id: string): Promise<void> {
-  const headers = await getHeaders(accessToken);
-  const response = await fetch(`${DRIVE_API_URL}/${id}`, {
-    method: "DELETE",
-    headers,
-  });
-  if (!response.ok) {
-    const errorBody = await response.text();
-    console.error("Drive delete error:", errorBody);
-    throw new Error("Failed to permanently delete note from Drive.");
-  }
-}
-
-async function updateFileMetadata(accessToken: string, id: string, metadata: object): Promise<void> {
-    const headers = await getHeaders(accessToken);
-    const response = await fetch(`${DRIVE_API_URL}/${id}`, {
-        method: 'PATCH',
-        headers,
-        body: JSON.stringify(metadata),
-    });
-
+  try {
+    const response = await fetch(`${DRIVE_API_URL}?q=${encodeURIComponent(query)}&spaces=appDataFolder&fields=files(id)`, { headers });
     if (!response.ok) {
-        throw new Error(`Failed to update file metadata in Drive.`);
+      console.error("Drive API error:", await response.text());
+      throw new Error("Failed to search for backup file in appDataFolder.");
     }
+    const data = await response.json();
+    return data.files.length > 0 ? data.files[0].id : null;
+  } catch (error) {
+    console.error("Error finding backup file:", error);
+    return null;
+  }
+}
+
+export async function uploadBackup(accessToken: string, data: BackupData): Promise<void> {
+  const headers = await getHeaders(accessToken);
+  const fileId = await findBackupFile(accessToken);
+  
+  const metadata = {
+    name: BACKUP_FILE_NAME,
+    mimeType: "application/json",
+    ...(fileId ? {} : { parents: ["appDataFolder"] }),
+  };
+  
+  const body = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+
+  let url = `${DRIVE_UPLOAD_URL}?uploadType=multipart`;
+  let method = 'POST';
+
+  if (fileId) {
+    url = `${DRIVE_UPLOAD_URL}/${fileId}?uploadType=multipart`;
+    method = 'PATCH';
+  }
+
+  const form = new FormData();
+  form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+  form.append('file', body);
+
+  const response = await fetch(url, {
+    method,
+    headers: { Authorization: `Bearer ${accessToken}` },
+    body: form,
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.json();
+    console.error("Failed to upload backup:", errorBody);
+    throw new Error(`Failed to upload backup file. Status: ${response.status}`);
+  }
+}
+
+export async function getBackup(accessToken: string): Promise<BackupData | null> {
+  const headers = await getHeaders(accessToken);
+  const fileId = await findBackupFile(accessToken);
+
+  if (!fileId) {
+    return null; // No backup found
+  }
+
+  const response = await fetch(`${DRIVE_API_URL}/${fileId}?alt=media&spaces=appDataFolder`, { headers });
+  
+  if (!response.ok) {
+    throw new Error("Failed to download backup file.");
+  }
+  
+  try {
+    const data = await response.json();
+    // Basic validation
+    if (Array.isArray(data.notes) && Array.isArray(data.trashed)) {
+      return data as BackupData;
+    }
+    return null;
+  } catch (error) {
+    console.error("Error parsing backup JSON:", error);
+    return null;
+  }
 }

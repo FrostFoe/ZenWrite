@@ -21,6 +21,8 @@ interface NotesState {
   deleteNotePermanently: (id: string) => Promise<void>;
   createNote: () => Promise<string | undefined>;
   resetState: () => void;
+  syncToDrive: () => Promise<void>;
+  importFromDrive: () => Promise<number>;
 }
 
 const useNotesStore = create<NotesState>((set, get) => ({
@@ -29,49 +31,36 @@ const useNotesStore = create<NotesState>((set, get) => ({
   isLoading: false,
   hasFetched: false,
   resetState: () => set({ notes: [], trashedNotes: [], hasFetched: false, isLoading: false }),
+
+  // Fetch notes from local DB
   fetchNotes: async () => {
     if (get().hasFetched) return;
     set({ isLoading: true });
-    const { isDriveSyncEnabled, userProfile } = useSettingsStore.getState();
     try {
-      let notes: Note[];
-      if (isDriveSyncEnabled && userProfile?.accessToken) {
-        notes = await driveDB.getNotes(userProfile.accessToken);
-      } else {
-        notes = await localDB.getNotes();
-      }
+      const notes = await localDB.getNotes();
       set({ notes, isLoading: false, hasFetched: true });
     } catch (error) {
       console.error("Failed to fetch notes:", error);
       set({ isLoading: false });
     }
   },
+
+  // Fetch trashed notes from local DB
   fetchTrashedNotes: async () => {
     set({ isLoading: true });
-    const { isDriveSyncEnabled, userProfile } = useSettingsStore.getState();
     try {
-      let trashedNotes: Note[];
-       if (isDriveSyncEnabled && userProfile?.accessToken) {
-        trashedNotes = await driveDB.getTrashedNotes(userProfile.accessToken);
-      } else {
-        trashedNotes = await localDB.getTrashedNotes();
-      }
+      const trashedNotes = await localDB.getTrashedNotes();
       set({ trashedNotes, isLoading: false });
     } catch (error) {
       console.error("Failed to fetch trashed notes:", error);
       set({ isLoading: false });
     }
   },
+
   createNote: async () => {
     set({ isLoading: true });
-    const { isDriveSyncEnabled, userProfile } = useSettingsStore.getState();
     try {
-      let noteId;
-      if (isDriveSyncEnabled && userProfile?.accessToken) {
-        noteId = await driveDB.createNote(userProfile.accessToken);
-      } else {
-        noteId = await localDB.createNote();
-      }
+      const noteId = await localDB.createNote();
       await get().fetchNotes(); // Re-fetch to get the new note
       get().resetState();
       await get().fetchNotes();
@@ -83,8 +72,8 @@ const useNotesStore = create<NotesState>((set, get) => ({
       return undefined;
     }
   },
+
   addImportedNotes: (importedNotes: Note[]) => {
-    // This will only support local import for now.
     localDB.importNotesWithData(importedNotes);
     const existingIds = new Set(get().notes.map(n => n.id));
     const newNotes = importedNotes.filter(n => !existingIds.has(n.id));
@@ -92,6 +81,7 @@ const useNotesStore = create<NotesState>((set, get) => ({
       notes: [...newNotes, ...state.notes],
     }));
   },
+
   trashNote: async (id: string) => {
     const noteToTrash = get().notes.find((note) => note.id === id);
     if (!noteToTrash) return;
@@ -101,13 +91,8 @@ const useNotesStore = create<NotesState>((set, get) => ({
       trashedNotes: [noteToTrash, ...state.trashedNotes],
     }));
 
-    const { isDriveSyncEnabled, userProfile } = useSettingsStore.getState();
     try {
-      if (isDriveSyncEnabled && userProfile?.accessToken) {
-        await driveDB.trashNote(userProfile.accessToken, id);
-      } else {
-        await localDB.trashNote(id);
-      }
+      await localDB.trashNote(id);
     } catch (error) {
       set((state) => ({
         notes: [noteToTrash, ...state.notes],
@@ -116,6 +101,7 @@ const useNotesStore = create<NotesState>((set, get) => ({
       console.error("Failed to trash note:", error);
     }
   },
+
   updateNote: async (id: string, updates: Partial<Note>) => {
     set((state) => ({
       notes: state.notes.map((note) =>
@@ -123,20 +109,13 @@ const useNotesStore = create<NotesState>((set, get) => ({
       ),
     }));
     
-    const { isDriveSyncEnabled, userProfile } = useSettingsStore.getState();
-    const noteToUpdate = get().notes.find(n => n.id === id);
-    if (!noteToUpdate) return;
-    
     try {
-      if (isDriveSyncEnabled && userProfile?.accessToken) {
-        await driveDB.updateNote(userProfile.accessToken, id, noteToUpdate);
-      } else {
-        await localDB.updateNote(id, updates);
-      }
+      await localDB.updateNote(id, updates);
     } catch (error) {
       console.error("Failed to update note in DB:", error);
     }
   },
+
   restoreNote: async (id: string) => {
     const noteToRestore = get().trashedNotes.find((note) => note.id === id);
     if (!noteToRestore) return;
@@ -146,13 +125,8 @@ const useNotesStore = create<NotesState>((set, get) => ({
       notes: [{ ...noteToRestore, isTrashed: false }, ...state.notes],
     }));
 
-    const { isDriveSyncEnabled, userProfile } = useSettingsStore.getState();
     try {
-      if (isDriveSyncEnabled && userProfile?.accessToken) {
-        await driveDB.restoreNote(userProfile.accessToken, id);
-      } else {
-        await localDB.restoreNote(id);
-      }
+      await localDB.restoreNote(id);
     } catch (error) {
       set((state) => ({
         notes: state.notes.filter((note) => note.id !== id),
@@ -161,33 +135,49 @@ const useNotesStore = create<NotesState>((set, get) => ({
       console.error("Failed to restore note:", error);
     }
   },
+
   deleteNotePermanently: async (id: string) => {
     const originalTrashed = [...get().trashedNotes];
     set((state) => ({
       trashedNotes: state.trashedNotes.filter((note) => note.id !== id),
     }));
 
-    const { isDriveSyncEnabled, userProfile } = useSettingsStore.getState();
     try {
-      if (isDriveSyncEnabled && userProfile?.accessToken) {
-        await driveDB.deleteNotePermanently(userProfile.accessToken, id);
-      } else {
-        await localDB.deleteNotePermanently(id);
-      }
+      await localDB.deleteNotePermanently(id);
     } catch (error) {
       console.error("Failed to permanently delete note:", error);
       set({ trashedNotes: originalTrashed });
     }
   },
+
+  syncToDrive: async () => {
+    const { userProfile } = useSettingsStore.getState();
+    if (!userProfile?.accessToken) throw new Error("Not logged in");
+
+    const notes = await localDB.getNotes();
+    const trashedNotes = await localDB.getTrashedNotes();
+    const backupData = { notes, trashed: trashedNotes };
+
+    await driveDB.uploadBackup(userProfile.accessToken, backupData);
+  },
+
+  importFromDrive: async (): Promise<number> => {
+    const { userProfile } = useSettingsStore.getState();
+    if (!userProfile?.accessToken) throw new Error("Not logged in");
+
+    const backupData = await driveDB.getBackup(userProfile.accessToken);
+    if (!backupData) throw new Error("No backup file found in Drive.");
+    
+    const allNotes = [...(backupData.notes || []), ...(backupData.trashed || [])];
+    if (allNotes.length > 0) {
+      await localDB.importNotesWithData(allNotes);
+      get().resetState();
+      await get().fetchNotes();
+    }
+    return allNotes.length;
+  }
 }));
 
-// Re-fetch notes when sync settings change
-useSettingsStore.subscribe((state, prevState) => {
-  if (state.isDriveSyncEnabled !== prevState.isDriveSyncEnabled || state.userProfile?.email !== prevState.userProfile?.email) {
-    useNotesStore.getState().resetState();
-    useNotesStore.getState().fetchNotes();
-  }
-});
 
 // Initial fetch on client side, if not already fetched.
 if (typeof window !== "undefined") {

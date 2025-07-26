@@ -28,7 +28,7 @@ import { cn } from "@/lib/utils";
 import { useNotes } from "@/hooks/use-notes";
 import { useGoogleLogin, googleLogout } from "@react-oauth/google";
 import { Switch } from "../ui/switch";
-import { User, LogOut, AlertTriangle } from "lucide-react";
+import { User, LogOut, AlertTriangle, UploadCloud, DownloadCloud } from "lucide-react";
 
 const themes = [
   { value: "theme-vanilla-fog", label: "Vanilla Fog" },
@@ -61,7 +61,12 @@ export default function SettingsPage() {
   const router = useRouter();
   const fontClass = font.split(" ")[0];
   const importInputRef = useRef<HTMLInputElement>(null);
-  const addImportedNotes = useNotes((state) => state.addImportedNotes);
+  
+  const {
+    addImportedNotes,
+    syncToDrive,
+    importFromDrive,
+  } = useNotes();
 
   const login = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
@@ -129,6 +134,28 @@ export default function SettingsPage() {
       }
     }
   };
+
+  const handleSyncToDrive = async () => {
+    toast.info("Google Drive-এ নোট সিঙ্ক করা হচ্ছে...");
+    try {
+      await syncToDrive();
+      toast.success("নোট সফলভাবে Google Drive-এ সিঙ্ক করা হয়েছে!");
+    } catch (error) {
+      toast.error("Google Drive-এ সিঙ্ক করতে ব্যর্থ হয়েছে।");
+      console.error(error);
+    }
+  };
+
+  const handleImportFromDrive = async () => {
+    toast.info("Google Drive থেকে নোট ইম্পোর্ট করা হচ্ছে...");
+    try {
+      const count = await importFromDrive();
+      toast.success(`${count} টি নোট সফলভাবে Google Drive থেকে ইম্পোর্ট করা হয়েছে!`);
+    } catch (error) {
+      toast.error("Google Drive থেকে ইম্পোর্ট করতে ব্যর্থ হয়েছে।");
+      console.error(error);
+    }
+  }
 
   const handleClearData = () => {
     if (
@@ -237,16 +264,6 @@ export default function SettingsPage() {
                         {userProfile.email}
                       </p>
                     </div>
-                    <div className="flex items-center space-x-2 w-full pt-4">
-                      <Label htmlFor="drive-sync-switch" className="flex-grow">
-                        Drive সিঙ্ক চালু করুন
-                      </Label>
-                      <Switch
-                        id="drive-sync-switch"
-                        checked={isDriveSyncEnabled}
-                        onCheckedChange={(checked) => toggleDriveSync(checked)}
-                      />
-                    </div>
                     <Button
                       onClick={handleLogout}
                       variant="outline"
@@ -272,13 +289,32 @@ export default function SettingsPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                {userProfile && (
+                  <>
+                    <Button
+                      onClick={handleSyncToDrive}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      <UploadCloud className="mr-2 h-4 w-4" />
+                      Drive-এ সিঙ্ক করুন
+                    </Button>
+                    <Button
+                      onClick={handleImportFromDrive}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      <DownloadCloud className="mr-2 h-4 w-4" />
+                      Drive থেকে ইম্পোর্ট করুন
+                    </Button>
+                  </>
+                )}
                 <Button
                   onClick={handleImportClick}
                   variant="outline"
                   className="w-full"
-                  disabled={isDriveSyncEnabled}
                 >
-                  নোট ইমপোর্ট করুন
+                  নোট ইমপোর্ট করুন (.json)
                 </Button>
                 <input
                   type="file"
