@@ -47,6 +47,3 @@ export const useSettingsStore = create<SettingsState>()(
     },
   ),
 );
-
-// Export useSettings as a simple alias for the store for consistency in components.
-export const useSettings = useSettingsStore;
