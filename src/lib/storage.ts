@@ -1,7 +1,7 @@
 "use client";
 
 import { Note } from "./types";
-import { get, set, del, keys, setMany } from "idb-keyval";
+import { get, set, del, keys, setMany, getMany } from "idb-keyval";
 import type { OutputData } from "@editorjs/editorjs";
 
 const MAX_HISTORY_LENGTH = 20;
