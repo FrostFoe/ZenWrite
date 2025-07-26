@@ -3,9 +3,7 @@
 
 import { create } from "zustand";
 import * as localDB from "@/lib/storage";
-import * as driveDB from "@/lib/drive-storage";
 import type { Note } from "@/lib/types";
-import { useSettingsStore } from "./use-settings";
 
 interface NotesState {
   notes: Note[];
@@ -21,8 +19,6 @@ interface NotesState {
   deleteNotePermanently: (id: string) => Promise<void>;
   createNote: () => Promise<string | undefined>;
   resetState: () => void;
-  syncToDrive: () => Promise<void>;
-  importFromDrive: () => Promise<number>;
 }
 
 const useNotesStore = create<NotesState>((set, get) => ({
@@ -147,35 +143,6 @@ const useNotesStore = create<NotesState>((set, get) => ({
       set({ trashedNotes: originalTrashed });
     }
   },
-
-  syncToDrive: async () => {
-    const { userProfile } = useSettingsStore.getState();
-    if (!userProfile?.accessToken) throw new Error("Not logged in");
-
-    const notes = await localDB.getNotes();
-    const trashedNotes = await localDB.getTrashedNotes();
-    const backupData = { notes, trashed: trashedNotes };
-
-    await driveDB.uploadBackup(userProfile.accessToken, backupData);
-  },
-
-  importFromDrive: async (): Promise<number> => {
-    const { userProfile } = useSettingsStore.getState();
-    if (!userProfile?.accessToken) throw new Error("Not logged in");
-
-    const backupData = await driveDB.getBackup(userProfile.accessToken);
-    if (!backupData) throw new Error("No backup file found in Drive.");
-    
-    const allNotes = [...(backupData.notes || []), ...(backupData.trashed || [])];
-    if (allNotes.length > 0) {
-      await localDB.importNotesWithData(allNotes);
-      // Force a full re-fetch to update the UI correctly
-      get().resetState();
-      await get().fetchNotes();
-      await get().fetchTrashedNotes();
-    }
-    return allNotes.length;
-  }
 }));
 
 export const useNotes = useNotesStore;

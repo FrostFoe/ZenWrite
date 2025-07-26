@@ -28,7 +28,6 @@ export default function NotesPage({
 }) {
   const router = useRouter();
   const font = useSettingsStore((state) => state.font);
-  const userProfile = useSettingsStore((state) => state.userProfile);
   
   const createNote = useNotes((state) => state.createNote);
   const addImportedNotes = useNotes((state) => state.addImportedNotes);
@@ -54,11 +53,8 @@ export default function NotesPage({
   }, [createNote, router]);
 
   const handleImportClick = useCallback(() => {
-    if (userProfile) {
-      toast.info("ড্রাইভ সিঙ্ক চালু থাকলে নোট ইম্পোর্ট করলে ডেটা কনফ্লিক্ট হতে পারে।");
-    }
     importInputRef.current?.click();
-  }, [userProfile]);
+  }, []);
 
   const handleFileImport = useCallback(async (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -70,7 +66,7 @@ export default function NotesPage({
         addImportedNotes(imported);
         toast.success(`${imported.length} টি নোট সফলভাবে ইমপোর্ট করা হয়েছে!`);
       } catch (error) {
-        toast.error("নোট ইমপোর্ট করতে ব্যর্থ হয়েছে। ফাইল ফরম্যাট সঠিক কিনা তা পরীক্ষা করুন।");
+        toast.error("নোট ইম্পোর্ট করতে ব্যর্থ হয়েছে। ফাইল ফরম্যাট সঠিক কিনা তা পরীক্ষা করুন।");
         console.error(error);
       } finally {
         if (importInputRef.current) {

@@ -26,10 +26,3 @@ export interface Collection {
   emoji: string;
   createdAt: number;
 }
-
-export interface UserProfile {
-  name: string;
-  email: string;
-  picture: string;
-  accessToken: string;
-}

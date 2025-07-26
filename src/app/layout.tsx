@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Tiro_Bangla, Hind_Siliguri, Baloo_Da_2 } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "sonner";
-import { GoogleOAuthProvider } from "@react-oauth/google";
 
 import "./globals.css";
 
@@ -32,8 +31,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f8fafc" },
-    { media: "(prefers-color-scheme: dark)", color: "#020817" },
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
   ],
   initialScale: 1,
   maximumScale: 1,
@@ -41,28 +40,11 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-// IMPORTANT: Replace with your actual Google Client ID in a .env.local file
-const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
-
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const isGoogleAuthAvailable = !!GOOGLE_CLIENT_ID;
-
-  const appContent = (
-      <ThemeProvider
-        attribute="class"
-        defaultTheme="system"
-        enableSystem
-        disableTransitionOnChange
-      >
-        {children}
-        <Toaster richColors />
-      </ThemeProvider>
-  );
-
   return (
     <html
       lang="bn"
@@ -70,13 +52,15 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="font-sans antialiased">
-        {isGoogleAuthAvailable ? (
-          <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-            {appContent}
-          </GoogleOAuthProvider>
-        ) : (
-          appContent
-        )}
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+          <Toaster richColors />
+        </ThemeProvider>
       </body>
     </html>
   );
