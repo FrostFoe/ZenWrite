@@ -8,7 +8,6 @@ const pwaConfig = withPWA({
   skipWaiting: true,
   disable: process.env.NODE_ENV === "development",
   fallbacks: {
-    // Only fall back to the offline page for document navigation
     document: "/offline",
   },
 });
