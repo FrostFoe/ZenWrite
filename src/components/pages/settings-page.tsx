@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useRef } from "react";
@@ -17,13 +18,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import {
-  clearAllNotes,
-  exportNotes,
-  importNotes,
-} from "@/lib/storage";
+import { clearAllNotes, exportNotes, importNotes } from "@/lib/storage";
 import { useRouter } from "next/navigation";
 import Sidebar from "../nav/sidebar";
 import { cn } from "@/lib/utils";
@@ -64,7 +62,9 @@ export default function SettingsPage() {
     importInputRef.current?.click();
   };
 
-  const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileImport = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0];
     if (file) {
       try {
@@ -72,7 +72,9 @@ export default function SettingsPage() {
         addImportedNotes(imported);
         toast.success(`${imported.length} টি নোট সফলভাবে ইমপোর্ট করা হয়েছে!`);
       } catch (error) {
-        toast.error("নোট ইমপোর্ট করতে ব্যর্থ হয়েছে। ফাইল ফরম্যাট সঠিক কিনা তা পরীক্ষা করুন।");
+        toast.error(
+          "নোট ইমপোর্ট করতে ব্যর্থ হয়েছে। ফাইল ফরম্যাট সঠিক কিনা তা পরীক্ষা করুন।",
+        );
         console.error(error);
       } finally {
         if (importInputRef.current) {
@@ -153,6 +155,18 @@ export default function SettingsPage() {
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
+                  <div className="space-y-0.5">
+                    <Label>সাকুরা মোড</Label>
+                    <CardDescription>
+                       একটি শান্ত সাকুরা এফেক্ট চালু করুন।
+                    </CardDescription>
+                  </div>
+                  <Switch
+                    checked={settings.showSakura}
+                    onCheckedChange={(value) => setSetting("showSakura", value)}
+                  />
+                </div>
               </CardContent>
             </Card>
 
@@ -164,7 +178,7 @@ export default function SettingsPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                 <Button
+                <Button
                   onClick={handleImportClick}
                   variant="outline"
                   className="w-full"
@@ -200,5 +214,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-
-    

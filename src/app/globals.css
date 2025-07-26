@@ -224,3 +224,33 @@ html.font-hind-siliguri {
 html.font-baloo-da-2 {
   --font-sans: "Baloo Da 2", sans-serif;
 }
+
+/* Sakura Petals CSS */
+@keyframes fall {
+  0% {
+    transform: translateY(-10vh) rotate(0deg);
+  }
+  100% {
+    transform: translateY(110vh) rotate(720deg);
+  }
+}
+
+@keyframes sway {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(80px);
+  }
+}
+
+.petal {
+  position: absolute;
+  top: 0;
+  animation-name: fall, sway;
+  animation-timing-function: linear, ease-in-out;
+  animation-iteration-count: infinite, infinite;
+  animation-direction: normal, alternate;
+  pointer-events: none;
+}
