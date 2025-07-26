@@ -1,4 +1,4 @@
-import Sidebar from "@/components/nav/sidebar";
+import Sidebar from "@/components/layout/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Loading() {

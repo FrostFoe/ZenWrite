@@ -1,0 +1,104 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
+import { Note } from "@/lib/types";
+import { getNote, updateNote } from "@/lib/storage";
+import Loading from "@/app/loading";
+import { Button } from "@/components/ui/button";
+import NoteHistoryTimeline from "@/components/ui/note-history-timeline";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import { useSettingsStore } from "@/stores/use-settings";
+import EmptyHistoryState from "./_components/empty-history-state";
+
+export default function NoteHistoryPage() {
+  const params = useParams();
+  const router = useRouter();
+  const noteId = params.noteId as string;
+  const [note, setNote] = useState<Note | null>(null);
+  const [loading, setLoading] = useState(true);
+  const font = useSettingsStore((state) => state.font);
+
+  useEffect(() => {
+    const fetchNote = async () => {
+      if (!noteId) return;
+      try {
+        const fetchedNote = await getNote(noteId);
+        if (fetchedNote) {
+          setNote(fetchedNote);
+        } else {
+          toast.error("নোট খুঁজে পাওয়া যায়নি।");
+          router.replace("/notes");
+        }
+      } catch (error) {
+        toast.error("নোট লোড করতে সমস্যা হয়েছে।");
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchNote();
+  }, [noteId, router]);
+
+  const handleRestore = async (versionIndex: number) => {
+    if (!note || !note.history) return;
+    const versionToRestore = note.history[versionIndex];
+    if (!versionToRestore) {
+      toast.error("এই সংস্করণটি পুনরুদ্ধার করা সম্ভব নয়।");
+      return;
+    }
+
+    try {
+      await updateNote(note.id, {
+        content: versionToRestore.content,
+        title: " পুনরুদ্ধার করা সংস্করণ",
+      });
+      toast.success("সংস্করণটি সফলভাবে পুনরুদ্ধার করা হয়েছে!");
+      router.push(`/editor/${note.id}`);
+    } catch (error) {
+      toast.error("সংস্করণটি পুনরুদ্ধার করতে সমস্যা হয়েছে।");
+      console.error(error);
+    }
+  };
+
+  if (loading) {
+    return <Loading />;
+  }
+
+  if (!note) {
+    return null;
+  }
+
+  const fontClass = font.split(" ")[0];
+
+  return (
+    <div className={cn("h-full space-y-8 p-4 sm:p-6 lg:p-8", fontClass)}>
+      <header className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => router.back()}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+              নোটের ইতিহাস
+            </h1>
+            <p className="line-clamp-1 text-sm text-muted-foreground">
+              "{note.title}" এর সংস্করণসমূহ
+            </p>
+          </div>
+        </div>
+      </header>
+
+      {note.history && note.history.length > 0 ? (
+        <NoteHistoryTimeline
+          history={note.history}
+          onRestore={handleRestore}
+        />
+      ) : (
+        <EmptyHistoryState />
+      )}
+    </div>
+  );
+}
